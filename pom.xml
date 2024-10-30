@@ -17,7 +17,7 @@
         <swagger.core.version>1.6.2</swagger.core.version>
     </properties>
     <description> 简单的复用项目中常用的工具 </description>
-    <url>https://wuanwanghao.top/</url>
+    <url>https://github.com/forget-the-bright/HaoUtil</url>
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -127,9 +127,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/xxx/yyy.git</connection>
-        <developerConnection>scm:git:https://github.com/xxx/yyy.git</developerConnection>
-        <url>https://github.com/xxx/yyy</url>
+        <connection>scm:git:https://github.com/forget-the-bright/HaoUtil.git</connection>
+        <developerConnection>scm:git:https://github.com/forget-the-bright/HaoUtil.git</developerConnection>
+        <url>https://github.com/forget-the-bright/HaoUtil.git</url>
     </scm>
 
     <distributionManagement>
