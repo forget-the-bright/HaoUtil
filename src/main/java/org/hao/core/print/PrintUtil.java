@@ -53,10 +53,18 @@ public enum PrintUtil {
         val = ObjectUtils.isEmpty(val) ? "null" : val;
         printSingleColor(getColor(), 2, val.toString());
     }
-
     public void Println(Object val, PrintUtil background) {
         val = ObjectUtils.isEmpty(val) ? "null" : val;
-        printSingleColor(getColor(), background.getColor()+10,2, val.toString());
+        printSingleColor(getColor(), background.getColor() + 10, 2, val.toString());
+    }
+    public String getColorStr(Object val) {
+        val = ObjectUtils.isEmpty(val) ? "null" : val;
+        return getColorString(getColor(), 2, val.toString());
+    }
+
+    public String getColorStr(Object val, PrintUtil background) {
+        val = ObjectUtils.isEmpty(val) ? "null" : val;
+        return getColorString(getColor(), background.getColor() + 10, 2, val.toString());
     }
 
     /**
@@ -73,4 +81,13 @@ public enum PrintUtil {
     private void printSingleColor(int code, int backCode, int n, String content) {
         System.out.format("\33[%d;%d;%dm%s\n", code, backCode, n, content + "\33[0;39m");
     }
+
+    private String getColorString(int code, int n, String content) {
+        return String.format("\33[%d;%dm%s\33[0;39m", code, n, content);
+    }
+
+    private String getColorString(int code, int backCode, int n, String content) {
+        return String.format("\33[%d;%d;%dm%s\33[0;39m", code, backCode, n, content);
+    }
+
 }
