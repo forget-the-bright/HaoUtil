@@ -10,6 +10,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "hao-util")
 public class HaoUtilProperties {
     private boolean enabled;
+    private boolean printInterface;
+
+    public boolean isPrintInterface() {
+        return printInterface;
+    }
+
+    public void setPrintInterface(boolean printInterface) {
+        this.printInterface = printInterface;
+    }
 
     public boolean isEnabled() {
         return enabled;
