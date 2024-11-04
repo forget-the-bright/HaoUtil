@@ -27,7 +27,7 @@ public class PrintInterfaceUtil {
         String requestURI = request.getRequestURI();
         String userName = IPUtils.getIpAddr(request);
         System.out.println();
-        String printImprotMethod = "==================  进入  " + className + ":方法:" + methodName + value + ":URL:"+requestURI+"=====================================";
+        String printImprotMethod = "==================  进入  " + className + ":方法:" + methodName + value + "URL: "+requestURI+"=====================================";
         //PrintUtil.BLUE.Println(printImprotMethod);
         logger.info(PrintUtil.BLUE.getColorStr(printImprotMethod));
         String zhanwei = StrUtil.repeat('=', (int) Math.ceil(printImprotMethod.length() / 3));
@@ -63,7 +63,7 @@ public class PrintInterfaceUtil {
                 + second + "秒,共" + interval + "毫秒"
         ));
         //PrintUtil.BLUE.Println("===================================================  方法执行完毕  ===================================================");
-        logger.info(PrintUtil.BLUE.getColorStr("===================================================  方法执行"+(flag?"失败":"成功")+"  ==================================================="));
+        logger.info(PrintUtil.BLUE.getColorStr("=======================================================  方法执行"+(flag?"失败":"成功")+"  ======================================================="));
         System.out.println();
 
     }
