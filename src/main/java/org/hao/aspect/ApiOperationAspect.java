@@ -20,11 +20,11 @@ public class ApiOperationAspect {
 
     @Around("@annotation(apiOperation)")
     public Object printLnTimeAround(ProceedingJoinPoint joinPoint, ApiOperation apiOperation) throws Throwable {
-
-        String className = joinPoint.getTarget().getClass().getSimpleName();
+        Class<?> aClass = joinPoint.getTarget().getClass();
+        String className = aClass.getSimpleName();
         String methodName = ((MethodSignature) joinPoint.getSignature()).getMethod().getName();
         String value = ":" + apiOperation.value() + ": ";
-        PrintInterfaceUtil.executeBefore(className, methodName, value);
+        PrintInterfaceUtil.executeBefore(className, methodName, value,aClass);
         //执行方法
         long startTime = System.currentTimeMillis();   //获取开始时间
         //注意，如果调用joinPoint.proceed()方法，则修改的参数值不会生效，必须调用joinPoint.proceed(Object[] args)
@@ -33,10 +33,10 @@ public class ApiOperationAspect {
             //注意，如果调用joinPoint.proceed()方法，则修改的参数值不会生效，必须调用joinPoint.proceed(Object[] args)
             proceed = joinPoint.proceed();
             //方法执行完成后台操作
-            PrintInterfaceUtil.executeAfter(startTime, className, methodName, value,false,"");
+            PrintInterfaceUtil.executeAfter(startTime, className, methodName, value,false,null,aClass);
         } catch (Exception e) {
             //方法执行完成后台操作
-            PrintInterfaceUtil.executeAfter(startTime, className, methodName, value,true,e.getMessage());
+            PrintInterfaceUtil.executeAfter(startTime, className, methodName, value,true,e,aClass);
             throw e;
         }
         //如果这里不返回result，则目标对象实际返回值会被置为null
