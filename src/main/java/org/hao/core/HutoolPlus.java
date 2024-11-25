@@ -1,8 +1,11 @@
 package org.hao.core;
 
+import cn.hutool.Hutool;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.text.StrFormatter;
 import cn.hutool.core.util.ReUtil;
+import cn.hutool.http.HttpUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import lombok.SneakyThrows;
 
@@ -35,9 +38,91 @@ public class HutoolPlus {
         // 设置Content-Disposition响应头，用于指定文件名，文件名使用UTF-8编码以支持中文
         response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
         // 设置响应的内容类型，指定为Excel格式，同时设置字符集为utf-8
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
+        response.setContentType(getContentTypeForExtension(fileName));
     }
 
+    private static String getContentTypeForExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        String fileExtension = "";
+        if (dotIndex != -1 && dotIndex < fileName.length() - 1) {
+            fileExtension = fileName.substring(dotIndex + 1);
+        }
+        switch (fileExtension) {
+            case "txt":
+                return "text/plain";
+            case "html":
+                return "text/html";
+            case "css":
+                return "text/css";
+            case "js":
+                return "text/javascript";
+            case "json":
+                return "application/json";
+            case "xml":
+                return "application/xml";
+            case "pdf":
+                return "application/pdf";
+            case "jpg":
+            case "jpeg":
+                return "image/jpeg";
+            case "png":
+                return "image/png";
+            case "gif":
+                return "image/gif";
+            case "bmp":
+                return "image/bmp";
+            case "svg":
+                return "image/svg+xml";
+            case "ico":
+                return "image/x-icon";
+            case "mp3":
+                return "audio/mpeg";
+            case "wav":
+                return "audio/wav";
+            case "ogg":
+                return "audio/ogg";
+            case "flac":
+                return "audio/flac";
+            case "aac":
+                return "audio/aac";
+            case "mp4":
+                return "video/mp4";
+            case "avi":
+                return "video/avi";
+            case "mkv":
+                return "video/webm";
+            case "mov":
+                return "video/quicktime";
+            case "wmv":
+                return "video/windowsmedia";
+            case "xls":
+                return "application/vnd.ms-excel";
+            case "xlsx":
+                return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8";
+            case "ppt":
+                return "application/vnd.ms-powerpoint";
+            case "pptx":
+                return "application/vnd.openxmlformats-officedocument.presentationml.presentation;charset=utf-8";
+            case "doc":
+                return "application/vnd.ms-word";
+            case "docx":
+                return "application/vnd.openxmlformats-officedocument.wordml.document;charset=utf-8";
+            case "zip":
+                return "application/zip";
+            case "rar":
+                return "application/x-rar-compressed";
+            case "7z":
+                return "application/x-7z-compressed";
+            case "tar":
+                return "application/x-tar";
+            case "gz":
+                return "application/x-gz";
+            case "exe":
+            case "dll":
+            default:
+                return "application/octet-stream";
+        }
+    }
 
     /**
      * 使用ExcelWriter将数据下载到客户端
@@ -155,7 +240,7 @@ public class HutoolPlus {
      * 此方法旨在处理需要对浮点数进行精确舍入的场景，由于double类型的精度问题，
      * 使用BigDecimal来确保舍入操作的精确性
      *
-     * @param v 待舍入的double类型数值
+     * @param v     待舍入的double类型数值
      * @param scale 舍入后的规模（小数点后的位数）
      * @return 舍入后的BigDecimal对象
      */
@@ -195,7 +280,7 @@ public class HutoolPlus {
      * 对于等于0或不是数字的情况，直接返回"0.0"
      * 对于其他情况，使用MathContext进行四舍五入
      *
-     * @param v 待处理的双精度浮点数
+     * @param v     待处理的双精度浮点数
      * @param scale 小数点后的位数
      * @return 四舍五入后的字符串表示的数字
      */
@@ -222,9 +307,9 @@ public class HutoolPlus {
      * 如果数值等于0，则返回"0.0"，以确保至少有一位小数
      * 如果数值小于1且不等于0，则使用指定的有效数字位数进行四舍五入
      *
-     * @param v   待处理的数值字符串
+     * @param v     待处理的数值字符串
      * @param scale 小数位数或有效数字位数
-     * @return    四舍五入后的数值字符串
+     * @return 四舍五入后的数值字符串
      */
     public static String roundStr(String v, int scale) {
         // 创建BigDecimal对象以进行精确计算
@@ -239,7 +324,6 @@ public class HutoolPlus {
         // 当数值小于1且不等于0时，按有效数字位数进行四舍五入
         return bigDecimal.round(new MathContext(scale, RoundingMode.HALF_UP)).toPlainString();
     }
-
 
 
     /**
@@ -310,6 +394,7 @@ public class HutoolPlus {
 
 
     //region 时间相关
+
     /**
      * 判断字符串是否符合日期的月份格式
      *
