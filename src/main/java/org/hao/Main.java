@@ -1,20 +1,21 @@
 package org.hao;
 
-import cn.hutool.core.date.DateField;
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.io.LineHandler;
+import cn.hutool.core.util.ReflectUtil;
 import org.hao.core.ExpressionUtil;
-import org.hao.core.HutoolPlus;
 import org.hao.core.print.PrintUtil;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
+import org.mvel2.compiler.CompiledExpression;
+import org.mvel2.compiler.ExpressionCompiler;
+import org.mvel2.integration.impl.ImmutableDefaultFactory;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import java.io.PrintStream;
+import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 
 
 //TIP 要<b>运行</b>代码，请按 <shortcut actionId="Run"/> 或
@@ -35,26 +36,31 @@ public class Main {
         // 创建上下文
         MapVariableResolverFactory resolverFactory = new MapVariableResolverFactory(new HashMap<>());
         // resolverFactory.createVariable("base", new Main());
-         resolverFactory.createVariable("Math", Math.class);
+       // resolverFactory.createVariable("Math", Math.class);
         // resolverFactory.createVariable("add2", (BiFunction<Integer, Integer, Integer>) Main::add);
 
-
+        // test();
         // 定义表达式
         String expression =
                 "print(\"hello world!!!\");" +
-                "a = sub(4.125458,8.1); print(a); toDate(null); now(); offsetDay(toDate('2024-08-11 23:00:59'),10);" +
-                "Math.addExact(a,10)";
+                        "a = sub(4.125458,8.1); print(a); toDate(now()); now();b= offsetDay(toDate('2024-08-11 23:00:59'),10);" +
+                        "Math.addExact(a,10); offsetYear(b,10);";
 
-        ParserContext context = new ParserContext();
-        MVEL.compileExpression(ExpressionUtil.rulesTemplate, context);
-
-        // 获取函数列表
-        context.getFunctions().forEach((name, function) -> {
-            System.out.println("Function name: " + name);
-        });
-        // 执行表达式
-        Object result = ExpressionUtil.eval(expression, resolverFactory);
+      // expression = "print(\"hello world!!!\");";
+        ParserContext context = ExpressionUtil.buildParserContext();
+        context.addImport(Math.class.getSimpleName(), Math.class);
+       // resolverFactory.createVariable("a", Object.class);
+        Serializable serializable = MVEL.compileExpression(expression, context);
+        Object result = MVEL.executeExpression(serializable, context,resolverFactory);
         PrintUtil.RED.Println("eval :" + result);
+    }
+
+    private static void test() {
+        ParserContext parserContext = new ParserContext();
+        parserContext.addImport(Math.class.getSimpleName(), Math.class);
+        parserContext.addImport("add", ReflectUtil.getMethod(Math.class, "addExact", int.class, int.class));
+        Serializable s = MVEL.compileExpression("add(1,2)", parserContext);
+        Object o = MVEL.executeExpression(s, parserContext);
     }
 
 }
