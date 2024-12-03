@@ -8,6 +8,7 @@ import org.hao.core.ExpressionUtil;
 import org.hao.core.HutoolPlus;
 import org.hao.core.print.PrintUtil;
 import org.mvel2.MVEL;
+import org.mvel2.ParserContext;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
 
 import java.io.InputStream;
@@ -44,7 +45,13 @@ public class Main {
                 "a = sub(4.125458,8.1); print(a); toDate(null); now(); offsetDay(toDate('2024-08-11 23:00:59'),10);" +
                 "Math.addExact(a,10)";
 
+        ParserContext context = new ParserContext();
+        MVEL.compileExpression(ExpressionUtil.rulesTemplate, context);
 
+        // 获取函数列表
+        context.getFunctions().forEach((name, function) -> {
+            System.out.println("Function name: " + name);
+        });
         // 执行表达式
         Object result = ExpressionUtil.eval(expression, resolverFactory);
         PrintUtil.RED.Println("eval :" + result);

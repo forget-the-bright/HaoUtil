@@ -9,14 +9,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
- * @Description TODO
- * @Author wanghao(helloworlwh @ 163.com)
- * @Date 2024/12/3 下午5:45
+ * ExpressionUtil 是一个用于处理表达式的工具类
+ * @author wanghao(helloworlwh @ 163.com)
+ * date 2024/12/3 下午5:45
  */
 public class ExpressionUtil {
 
 
-    private static final String rulesTemplate = initTemplate();
+    public static final String rulesTemplate = initTemplate();
 
     private static String initTemplate() {
         InputStream inputByClassPath = HutoolPlus.getInputByClassPath("META-INF/rulesTemplate.js");
