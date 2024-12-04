@@ -6,6 +6,37 @@ import java.util.Date;
 
 /**
  * 提供内置函数的类，主要用于数学计算和日期处理
+ * add(double a, double b) : 相加, 返回两个数的和
+ * sub(double a, double b) : 相减, 返回两个数的差
+ * print(Object obj) : 打印, 输出对象到控制台
+ * ceil(double a) : 向上取整, 返回向上取整后的值
+ * floor(double a) : 向下取整, 返回向下取整后的值
+ * round(double a) : 四舍五入, 返回四舍五入后的值
+ * max(int a, int b) : 获取最大值, 返回两个数中的较大值
+ * min(int a, int b) : 获取最小值, 返回两个数中的较小值
+ * power(double base, double exp) : 求幂, 返回 base 的 exp 次幂
+ * sqrt(double a) : 求平方根, 返回平方根
+ * random() : 获取随机数, 返回一个随机数
+ * sin(double a) : 计算正弦, 返回正弦值（弧度制）
+ * cos(double a) : 计算余弦, 返回余弦值（弧度制）
+ * tan(double a) : 计算正切, 返回正切值（弧度制）
+ * log(double a) : 求自然对数, 返回自然对数
+ * log10(double a) : 求以10为底的对数, 返回以10为底的对数
+ * exp(double a) : 求指数, 返回 e^x
+ * asin(double a) : 求反正弦, 返回反正弦值（弧度制）
+ * acos(double a) : 求反余弦, 返回反余弦值（弧度制）
+ * atan(double a) : 求反正切, 返回反正切值（弧度制）
+ * atan2(double y, double x) : 求坐标点 (x, y) 和 x 轴的夹角, 返回夹角（弧度制）
+ * trunc(double a) : 去掉小数部分, 返回去掉小数部分后的值
+ * now() : 获取当前日期时间, 返回当前日期时间
+ * toDate(Object date) : 将对象转换为日期, 返回转换后的日期
+ * dateTime(Date date) : 格式化日期时间, 返回格式化后的日期时间字符串
+ * offsetWeek(Object date, int offset) : 日期偏移周数, 返回偏移后的日期
+ * offsetMonth(Object date, int offset) : 日期偏移月数, 返回偏移后的日期
+ * offsetYear(Object date, int offset) : 日期偏移年数, 返回偏移后的日期
+ * offsetDay(Object date, int offset) : 日期偏移天数, 返回偏移后的日期
+ * offsetHour(Object date, int offset) : 日期偏移小时数, 返回偏移后的日期
+ * offsetMinute(Object date, int offset) : 日期偏移分钟数, 返回偏移后的日期
  */
 public class ExpressionBuiltInFunc {
 
@@ -226,11 +257,17 @@ public class ExpressionBuiltInFunc {
      * @param offset 偏移周数
      * @return 偏移后的日期
      */
-    public static Date offsetWeek(Date date, int offset) {
+    public static Date offsetWeek(Object date, int offset) {
         if (date == null) {
             return null;
         }
-        return cn.hutool.core.date.DateUtil.offsetWeek(date, offset);
+        Date dateTime = null;
+        if (date instanceof Date) {
+            dateTime = (Date) date;
+        } else {
+            dateTime = toDate(date);
+        }
+        return cn.hutool.core.date.DateUtil.offsetWeek(dateTime, offset);
     }
 
     /**
@@ -241,11 +278,17 @@ public class ExpressionBuiltInFunc {
      * @param offset 偏移月数
      * @return 偏移后的日期
      */
-    public static Date offsetMonth(Date date, int offset) {
+    public static Date offsetMonth(Object date, int offset) {
         if (date == null) {
             return null;
         }
-        return cn.hutool.core.date.DateUtil.offsetMonth(date, offset);
+        Date dateTime = null;
+        if (date instanceof Date) {
+            dateTime = (Date) date;
+        } else {
+            dateTime = toDate(date);
+        }
+        return cn.hutool.core.date.DateUtil.offsetMonth(dateTime, offset);
     }
 
     /**
@@ -256,11 +299,17 @@ public class ExpressionBuiltInFunc {
      * @param offset 偏移年数
      * @return 偏移后的日期
      */
-    public static Date offsetYear(Date date, int offset) {
+    public static Date offsetYear(Object date, int offset) {
         if (date == null) {
             return null;
         }
-        return cn.hutool.core.date.DateUtil.offset(date, cn.hutool.core.date.DateField.YEAR, offset);
+        Date dateTime = null;
+        if (date instanceof Date) {
+            dateTime = (Date) date;
+        } else {
+            dateTime = toDate(date);
+        }
+        return cn.hutool.core.date.DateUtil.offset(dateTime, cn.hutool.core.date.DateField.YEAR, offset);
     }
 
     /**
@@ -271,11 +320,17 @@ public class ExpressionBuiltInFunc {
      * @param offset 偏移天数
      * @return 偏移后的日期
      */
-    public static Date offsetDay(Date date, int offset) {
+    public static Date offsetDay(Object date, int offset) {
         if (date == null) {
             return null;
         }
-        return cn.hutool.core.date.DateUtil.offsetDay(date, offset);
+        Date dateTime = null;
+        if (date instanceof Date) {
+            dateTime = (Date) date;
+        } else {
+            dateTime = toDate(date);
+        }
+        return cn.hutool.core.date.DateUtil.offsetDay(dateTime, offset);
     }
 
     /**
@@ -286,11 +341,17 @@ public class ExpressionBuiltInFunc {
      * @param offset 偏移小时数
      * @return 偏移后的日期
      */
-    public static Date offsetHour(Date date, int offset) {
+    public static Date offsetHour(Object date, int offset) {
         if (date == null) {
             return null;
         }
-        return cn.hutool.core.date.DateUtil.offsetHour(date, offset);
+        Date dateTime = null;
+        if (date instanceof Date) {
+            dateTime = (Date) date;
+        } else {
+            dateTime = toDate(date);
+        }
+        return cn.hutool.core.date.DateUtil.offsetHour(dateTime, offset);
     }
 
     /**
@@ -301,10 +362,16 @@ public class ExpressionBuiltInFunc {
      * @param offset 偏移分钟数
      * @return 偏移后的日期
      */
-    public static Date offsetMinute(Date date, int offset) {
+    public static Date offsetMinute(Object date, int offset) {
         if (date == null) {
             return null;
         }
-        return cn.hutool.core.date.DateUtil.offsetMinute(date, offset);
+        Date dateTime = null;
+        if (date instanceof Date) {
+            dateTime = (Date) date;
+        } else {
+            dateTime = toDate(date);
+        }
+        return cn.hutool.core.date.DateUtil.offsetMinute(dateTime, offset);
     }
 }

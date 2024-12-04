@@ -102,7 +102,7 @@ public class ExpressionUtil {
      * 评估表达式
      *
      * @param expression 表达式
-     * @param vars        变量
+     * @param vars       变量
      * @return 评估结果
      */
     public static Object eval(String expression, Map<String, Object> vars) {
@@ -112,7 +112,7 @@ public class ExpressionUtil {
     /**
      * 评估表达式
      *
-     * @param expression 表达式
+     * @param expression      表达式
      * @param resolverFactory 变量解析工厂
      * @return 评估结果
      */
@@ -135,7 +135,7 @@ public class ExpressionUtil {
     /**
      * 执行表达式
      *
-     * @param expression 表达式
+     * @param expression    表达式
      * @param parserContext 解析上下文
      * @return 执行结果
      */
@@ -157,17 +157,18 @@ public class ExpressionUtil {
      * 执行表达式
      *
      * @param expression 表达式
-     * @param vars        变量
+     * @param vars       变量
      * @return 执行结果
      */
     public static Object executeExpression(String expression, Map<String, Object> vars) {
+        vars.putAll(getVariableResolverFactory());
         return executeExpression(expression, buildParserContext(), vars);
     }
 
     /**
      * 执行表达式
      *
-     * @param expression 表达式
+     * @param expression      表达式
      * @param resolverFactory 变量解析工厂
      * @return 执行结果
      */
@@ -178,14 +179,16 @@ public class ExpressionUtil {
     /**
      * 执行表达式
      *
-     * @param expression 表达式
+     * @param expression    表达式
      * @param parserContext 解析上下文
-     * @param vars        变量
+     * @param vars          变量
      * @return 执行结果
      */
     public static Object executeExpression(String expression, ParserContext parserContext, Map<String, Object> vars) {
         if (vars == null) {
             vars = getVariableResolverFactory();
+        } else {
+            vars.putAll(getVariableResolverFactory());
         }
         Serializable serializable = MVEL.compileExpression(expression, parserContext);
         return MVEL.executeExpression(serializable, parserContext, vars);
@@ -194,8 +197,8 @@ public class ExpressionUtil {
     /**
      * 执行表达式
      *
-     * @param expression 表达式
-     * @param parserContext 解析上下文
+     * @param expression      表达式
+     * @param parserContext   解析上下文
      * @param resolverFactory 变量解析工厂
      * @return 执行结果
      */
@@ -210,10 +213,10 @@ public class ExpressionUtil {
     /**
      * 添加全局方法
      *
-     * @param name 方法名
+     * @param name   方法名
      * @param method 方法对象
      */
-    public  void addGlobalMethod(String name, Method method) {
+    public void addGlobalMethod(String name, Method method) {
         if (builtInFunc.containsKey(name)) {
             throw new RuntimeException("name:" + name + " is already exist");
         }
@@ -226,10 +229,10 @@ public class ExpressionUtil {
     /**
      * 添加全局变量
      *
-     * @param name 变量名
+     * @param name   变量名
      * @param object 变量对象
      */
-    public  void addGlobalVariable(String name, Object object) {
+    public void addGlobalVariable(String name, Object object) {
         if (builtInFunc.containsKey(name)) {
             throw new RuntimeException("name:" + name + " is already exist");
         }
