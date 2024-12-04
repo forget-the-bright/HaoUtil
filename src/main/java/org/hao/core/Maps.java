@@ -31,6 +31,14 @@ public class Maps {
         return stringObjectLinkedHashMap;
     }
 
+    public static <T> Map<String, T> asMap(Collection<Object[]> entrys, Class<T> tClass) {
+        LinkedHashMap<String, T> stringObjectLinkedHashMap = new LinkedHashMap<>();
+        for (Object[] entry : entrys) {
+            stringObjectLinkedHashMap.put((String) entry[0], (T) entry[1]);
+        }
+        return stringObjectLinkedHashMap;
+    }
+
     public static <T> T asMap(Class<T> tClass, Object[]... entrys) {
         return asMap(tClass, Arrays.asList(entrys));
     }

@@ -6,7 +6,7 @@
 
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-<!--            <scope>provided</scope>-->
+            <scope>provided</scope>
             <optional>true</optional>
         </dependency>
 
@@ -96,7 +96,7 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <optional>true</optional>
-<!--            <scope>provided</scope>-->
+            <scope>provided</scope>
             <version>${hutool.version}</version>
         </dependency>
         <!--表达式解析库-->
@@ -105,7 +105,7 @@
             <artifactId>mvel2</artifactId>
             <version>2.5.2.Final</version>
             <optional>true</optional>
-<!--            <scope>provided</scope>-->
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
