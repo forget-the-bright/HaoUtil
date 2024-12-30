@@ -6,7 +6,7 @@
 
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.8</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -62,6 +62,7 @@
 
     runtime: 表示该依赖在编译时不可用，但在运行时可用，适用于那些只在运行时需要的依赖。
     import: 不实际包含依赖: 使用  import作用域并不会将这些依赖实际添加到你的项目中，而是使得该 BOM 文件中定义的依赖版本可用于后续定义依赖。
+    compile: 编译期引入
     -->
     <dependencies>
         <dependency>
@@ -105,7 +106,7 @@
             <artifactId>mvel2</artifactId>
             <version>2.5.2.Final</version>
 <!--            <optional>true</optional>-->
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
