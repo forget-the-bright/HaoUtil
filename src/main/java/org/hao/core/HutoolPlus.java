@@ -7,15 +7,23 @@ import cn.hutool.core.text.StrFormatter;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.poi.excel.ExcelWriter;
+import cn.hutool.poi.excel.style.StyleUtil;
 import lombok.SneakyThrows;
+import org.apache.poi.ss.usermodel.*;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Description TODO
@@ -187,7 +195,7 @@ public class HutoolPlus {
      * @param content     要写入的单元格内容，可以是任何对象类型
      * @return 返回操作后的ExcelWriter对象
      */
-/*    public static ExcelWriter merge(ExcelWriter writer, int firstColumn, int lastColumn, Object content) {
+    public static ExcelWriter merge(ExcelWriter writer, int firstColumn, int lastColumn, Object content) {
         // 获取当前行索引
         final int rowIndex = writer.getCurrentRow();
         // 执行合并单元格并写入内容的操作，参数true表示需要创建单元格
@@ -198,7 +206,7 @@ public class HutoolPlus {
         }
         // 返回操作后的ExcelWriter对象
         return writer;
-    }*/
+    }
 
     /**
      * 合并单元格并填充内容
@@ -212,13 +220,139 @@ public class HutoolPlus {
      * @param content       要填充到合并单元格中的内容
      * @return 返回执行合并和填充操作后的ExcelWriter对象
      */
-/*    public static ExcelWriter merge(ExcelWriter writer, int firstRow, int lastRow, int CurrentColumn, Object content) {
+    public static ExcelWriter merge(ExcelWriter writer, int firstRow, int lastRow, int CurrentColumn, Object content) {
         // 执行合并单元格并填充内容的操作，最后一个参数设为true以启用自动样式调整
         writer.merge(firstRow, lastRow, CurrentColumn, CurrentColumn, content, true);
         // 返回执行操作后的ExcelWriter对象
         return writer;
-    }*/
+    }
 
+
+    /**
+     * 根据ExcelWriter对象获取InputStream输入流
+     * 此方法用于将ExcelWriter对象中的工作簿转换为InputStream输入流，便于进一步处理或传输
+     *
+     * @param writer ExcelWriter对象，用于写入Excel数据
+     * @return InputStream输入流，包含Excel数据
+     * @throws IOException 当创建工作簿的输入流时发生I/O错误
+     */
+    public static InputStream getInputStreamByExcelWriter(ExcelWriter writer) throws IOException {
+        // 获取ExcelWriter对象中的Workbook工作簿
+        Workbook workbook = writer.getWorkbook();
+        // 通过Workbook工作簿获取InputStream输入流
+        InputStream is = getInputStreamByWorkbook(workbook);
+        // 返回包含Excel数据的输入流
+        return is;
+    }
+
+
+    /**
+     * 通过Workbook对象获取InputStream
+     * 该方法主要用于将Workbook对象转换为InputStream，以便于进一步的操作，如文件下载等
+     *
+     * @param workbook Excel工作簿对象，包含了Excel文件的全部信息
+     * @return InputStream 输入流，可以通过它来读取Excel文件的内容
+     */
+    private static InputStream getInputStreamByWorkbook(Workbook workbook) {
+        InputStream is = null;
+        try {
+            // 创建一个字节输出流，用于暂存Workbook对象写入的字节数据
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            // 将Workbook对象写入到字节输出流中
+            workbook.write(bos);
+            // 从字节输出流中获取字节数组
+            byte[] barray = bos.toByteArray();
+            // 使用获取到的字节数组创建一个字节输入流
+            is = new ByteArrayInputStream(barray);
+
+        } catch (IOException e) {
+            // 打印异常信息，此处简单处理异常，实际使用中可根据需要进行更详细的异常处理
+            e.printStackTrace();
+        }
+        // 返回字节输入流
+        return is;
+    }
+
+    /**
+     * 根据导出数据和表头信息获取ExcelWriter对象
+     * 该方法主要用于简化Excel导出过程，通过传入数据和表头信息，自动完成Excel表的格式设置和数据写入
+     *
+     * @param hashMaps    一个包含多行数据的列表，每行数据为一个Map，键为字段名，值为字段值
+     * @param tableHeader 一个LinkedHashMap，用于定义Excel表的表头，键为字段名，值为表头显示文本
+     * @param title 标题
+     * @return 返回一个ExcelWriter对象，用于进一步操作Excel文件，如输出到文件或流
+     */
+    public static ExcelWriter getExcelWriterByExportExcelVO(List<? extends Map<String, Object>> hashMaps, LinkedHashMap<String, String> tableHeader, String title) {
+        // Step.3 AutoPoi 导出Excel
+        // 通过工具类创建writer，默认创建xls格式
+        ExcelWriter writer = cn.hutool.poi.excel.ExcelUtil.getWriter(true);
+        //自定义标题别名
+        tableHeader.forEach((k, v) -> {
+            writer.addHeaderAlias(k, v);
+        });
+        // 合并单元格后的标题行，使用默认标题样式
+
+        writer.merge(tableHeader.size() - 1, title);
+        Font font = writer.createFont();
+        font.setBold(true);
+        font.setColor(Font.COLOR_NORMAL);
+        font.setItalic(true);
+        //第二个参数表示是否忽略头部样式
+        writer.getHeadCellStyle().setFont(font);
+        // 一次性写出内容，使用默认样式，强制输出标题
+        writer.write(hashMaps, true);
+        setSizeColumn(writer.getSheet(), tableHeader.size() - 1);
+        StyleUtil.setAlign(writer.getCellStyle(), HorizontalAlignment.LEFT, VerticalAlignment.CENTER);
+        /*        writer.getStyleSet().setAlign(HorizontalAlignment.LEFT, VerticalAlignment.CENTER);*/
+        //out为OutputStream，需要写出到的目标流
+        //response.setContentType("application/vnd.ms-excel;charset=utf-8");
+        //test.xls是弹出下载对话框的文件名，不能为中文，中文请自行编码
+        return writer;
+    }
+
+    public static ExcelWriter getExcelWriterByExportExcelVO(List<? extends Map<String, Object>> hashMaps, LinkedHashMap<String, String> tableHeader) {
+        return getExcelWriterByExportExcelVO(hashMaps, tableHeader, "导出标题");
+    }
+
+
+    /**
+     * 自适应宽度(中文支持)
+     *
+     * @param sheet
+     * @param size  因为for循环从0开始，size值为 列数-1
+     */
+    public static void setSizeColumn(Sheet sheet, int size) {
+        for (int columnNum = 0; columnNum <= size; columnNum++) {
+            int columnWidth = sheet.getColumnWidth(columnNum) / 256;
+            for (int rowNum = 0; rowNum <= sheet.getLastRowNum(); rowNum++) {
+                Row currentRow;
+                //当前行未被使用过
+                if (sheet.getRow(rowNum) == null) {
+                    currentRow = sheet.createRow(rowNum);
+                } else {
+                    currentRow = sheet.getRow(rowNum);
+                }
+
+                if (currentRow.getCell(columnNum) != null) {
+                    Cell currentCell = currentRow.getCell(columnNum);
+                    if (currentCell.getCellType() == CellType.STRING) {
+                        int length = currentCell.getStringCellValue().getBytes().length;
+                        if (columnWidth < length) {
+                            columnWidth = length;
+                        }
+                    } else {
+                        columnWidth = columnWidth + 5;
+                    }
+                }
+            }
+            if (columnWidth > 60) {
+                sheet.setColumnWidth(columnNum, 60 * 256);//columnWidth * 256
+            } else {
+                sheet.setColumnWidth(columnNum, columnWidth * 256);//columnWidth * 256
+            }
+
+        }
+    }
     //endregion
 
     /**
