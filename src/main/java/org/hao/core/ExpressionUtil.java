@@ -191,7 +191,11 @@ public class ExpressionUtil {
             vars.putAll(getVariableResolverFactory());
         }
         Serializable serializable = MVEL.compileExpression(expression, parserContext);
-        return MVEL.executeExpression(serializable, parserContext, vars);
+        Object result = MVEL.executeExpression(serializable, parserContext, vars);
+        for (String key : getVariableResolverFactory().keySet()) {
+            vars.remove(key);
+        }
+        return result;
     }
 
     /**

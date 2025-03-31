@@ -1,8 +1,6 @@
 package org.hao.core.print;
 
 
-import org.springframework.util.ObjectUtils;
-
 public enum PrintUtil {
     RED {
         public Integer getColor() {
@@ -50,20 +48,20 @@ public enum PrintUtil {
     }
 
     public void Println(Object val) {
-        val = ObjectUtils.isEmpty(val) ? "null" : val;
+        val = val == null ? "null" : val;
         printSingleColor(getColor(), 2, val.toString());
     }
     public void Println(Object val, PrintUtil background) {
-        val = ObjectUtils.isEmpty(val) ? "null" : val;
+        val = val == null ? "null" : val;
         printSingleColor(getColor(), background.getColor() + 10, 2, val.toString());
     }
     public String getColorStr(Object val) {
-        val = ObjectUtils.isEmpty(val) ? "null" : val;
+        val = val == null ? "null" : val;
         return getColorString(getColor(), 2, val.toString());
     }
 
     public String getColorStr(Object val, PrintUtil background) {
-        val = ObjectUtils.isEmpty(val) ? "null" : val;
+        val = val == null ? "null" : val;
         return getColorString(getColor(), background.getColor() + 10, 2, val.toString());
     }
 

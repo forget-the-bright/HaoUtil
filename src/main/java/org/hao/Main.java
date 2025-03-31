@@ -1,7 +1,9 @@
 package org.hao;
 
 import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
 import org.hao.core.ExpressionUtil;
+import org.hao.core.Maps;
 import org.hao.core.print.PrintUtil;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
 
@@ -41,6 +43,15 @@ public class Main {
         Object result = ExpressionUtil.executeExpression(expression);
         PrintUtil.RED.Println("eval :" + result);
         Map<String, Object> variableResolverFactory = ExpressionUtil.getVariableResolverFactory();
+
+        Map<String, Object> map = Maps.asMap(
+                Maps.put("a", 1),
+                Maps.put("b", 1),
+                Maps.put("c", ""),
+                Maps.put("d", "")
+        );
+        Object o = ExpressionUtil.executeExpression("c =a + b; var e = c; d=e+1;f =a;张三='123'", map);
+        System.out.println(StrUtil.format("(c =a + b) = {}", o));
     }
 
 }
