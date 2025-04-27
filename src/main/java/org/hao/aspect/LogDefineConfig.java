@@ -36,7 +36,7 @@ public class LogDefineConfig {
         put("default", (className, methodName, aClass, error, beginIntervalMs) -> {
             Logger logger = LoggerFactory.getLogger(aClass);
             long endIntervalMs = System.currentTimeMillis(); //获取结束时间
-            long intervalMs = beginIntervalMs - endIntervalMs;
+            long intervalMs = endIntervalMs - beginIntervalMs;
             String hour = formatterHour.format(intervalMs);
             String minute = formatterMinute.format(intervalMs);
             String second = formatterSecond.format(intervalMs);
