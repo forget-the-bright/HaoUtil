@@ -1,8 +1,12 @@
 package org.hao.core;
 
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.text.StrFormatter;
 import cn.hutool.core.util.ReUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import cn.hutool.poi.excel.style.StyleUtil;
@@ -19,10 +23,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Description TODO
@@ -659,6 +660,94 @@ public class HutoolPlus {
         return ReUtil.isMatch("^\\d{4}$", time);
     }
 
+
+    public static DateField convertDateField(String queryType) {
+        if (StrUtil.equals(queryType, "month")) {
+            return DateField.MONTH;
+        }
+        if (StrUtil.equals(queryType, "day")) {
+            return DateField.DAY_OF_YEAR;
+        }
+        if (StrUtil.equals(queryType, "hour")) {
+            return DateField.HOUR;
+        }
+        if (StrUtil.equals(queryType, "minute")) {
+            return DateField.MINUTE;
+        }
+        if (StrUtil.equals(queryType, "second")) {
+            return DateField.SECOND;
+        }
+        if (StrUtil.equals(queryType, "week")) {
+            return DateField.WEEK_OF_YEAR;
+        }
+        return null;
+    }
+
+    public static DateTime beginOf(Date date, String dateField) {
+        return beginOf(date, convertDateField(dateField));
+    }
+
+    public static DateTime beginOf(Date date, DateField dateField) {
+        if (dateField == DateField.YEAR) {
+            return cn.hutool.core.date.DateUtil.beginOfYear(date);
+        }
+        if (dateField == DateField.MONTH) {
+            return cn.hutool.core.date.DateUtil.beginOfMonth(date);
+        }
+        if (dateField == DateField.DAY_OF_MONTH ||
+                dateField == DateField.DAY_OF_WEEK ||
+                dateField == DateField.DAY_OF_WEEK_IN_MONTH ||
+                dateField == DateField.DAY_OF_YEAR) {
+            return cn.hutool.core.date.DateUtil.beginOfDay(date);
+        }
+        if (dateField == DateField.WEEK_OF_MONTH ||
+                dateField == DateField.WEEK_OF_YEAR) {
+            return cn.hutool.core.date.DateUtil.beginOfWeek(date);
+        }
+        if (dateField == DateField.HOUR || dateField == DateField.HOUR_OF_DAY) {
+            return cn.hutool.core.date.DateUtil.beginOfHour(date);
+        }
+        if (dateField == DateField.MINUTE) {
+            return cn.hutool.core.date.DateUtil.beginOfMinute(date);
+        }
+        if (dateField == DateField.SECOND) {
+            return cn.hutool.core.date.DateUtil.beginOfSecond(date);
+        }
+        return new DateTime(date);
+    }
+
+    public static DateTime endOf(Date date, String dateField) {
+        return endOf(date, convertDateField(dateField));
+    }
+
+    public static DateTime endOf(Date date, DateField dateField) {
+        if (dateField == DateField.YEAR) {
+            return cn.hutool.core.date.DateUtil.endOfYear(date);
+        }
+        if (dateField == DateField.MONTH) {
+            return cn.hutool.core.date.DateUtil.endOfMonth(date);
+        }
+        if (dateField == DateField.DAY_OF_MONTH ||
+                dateField == DateField.DAY_OF_WEEK ||
+                dateField == DateField.DAY_OF_WEEK_IN_MONTH ||
+                dateField == DateField.DAY_OF_YEAR) {
+            return cn.hutool.core.date.DateUtil.endOfDay(date);
+        }
+        if (dateField == DateField.WEEK_OF_MONTH ||
+                dateField == DateField.WEEK_OF_YEAR) {
+            return cn.hutool.core.date.DateUtil.endOfWeek(date);
+        }
+        if (dateField == DateField.HOUR || dateField == DateField.HOUR_OF_DAY) {
+            return cn.hutool.core.date.DateUtil.endOfHour(date);
+        }
+        if (dateField == DateField.MINUTE) {
+            return cn.hutool.core.date.DateUtil.endOfMinute(date);
+        }
+        if (dateField == DateField.SECOND) {
+            return DateUtil.endOfSecond(date);
+        }
+        return new DateTime(date);
+    }
     //endregion
 
     /**
