@@ -4,7 +4,9 @@ import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import org.hao.core.ExpressionUtil;
 import org.hao.core.Maps;
+import org.hao.core.ip.IPUtils;
 import org.hao.core.print.PrintUtil;
+import org.hao.spring.SpringRunUtil;
 import org.mvel2.integration.impl.MapVariableResolverFactory;
 
 import java.lang.reflect.Method;
@@ -26,7 +28,7 @@ public class Main {
             System.out.println("i = " + i);
             PrintUtil.BLUE.Println("i = " + i);
         }
-
+        SpringRunUtil.printRunInfo();
         // 创建上下文
         MapVariableResolverFactory resolverFactory = new MapVariableResolverFactory(new HashMap<>());
         // resolverFactory.createVariable("base", new Main());

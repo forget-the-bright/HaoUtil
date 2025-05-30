@@ -8,11 +8,14 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
 /**
- * Description:
- * ClassName: ApiOperationAspect
- * Author: wanghao(helloworlwh @ 163.com)
- * date: 2024.10.31 10:07
- * version: 1.0
+ * 切面类，用于处理带有 {@link io.swagger.annotations.ApiOperation} 注解的方法，
+ * 在方法执行前后打印接口操作日志信息。
+ *
+ * <p>该切面依赖于 {@link PrintInterfaceUtil} 提供具体的日志输出行为。</p>
+ *
+ * @author wanghao (helloworlwh@163.com)
+ * @version 1.0
+ * @since 2024.10.31
  */
 @Aspect
 @Component

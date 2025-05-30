@@ -4,6 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+/**
+ * 提供便捷方法创建和操作 {@link List} 的工具类。
+ *
+ * <p>该类包含多种静态方法，用于快速构建具有初始值或动态生成元素的列表，
+ * 支持指定返回类型以及通过泛型定义元素类型。</p>
+ *
+ * @author wanghao
+ * @since 2021.12.13
+ */
 
 public class Lists {
 

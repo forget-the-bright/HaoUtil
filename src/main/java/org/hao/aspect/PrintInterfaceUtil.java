@@ -14,9 +14,13 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 /**
- * Description TODO
- * Author wanghao(helloworlwh @ 163.com)
- * Date 2024/10/31 上午11:26
+ * 打印接口调用日志工具类，用于在方法执行前后输出请求信息、耗时、用户 IP、执行时间等。
+ *
+ * <p>该类通常被切面类如 {@link PrintAspect} 调用，提供统一的日志格式输出，
+ * 支持控制台和日志框架（如 SLF4J）的彩色日志打印。</p>
+ *
+ * @author wanghao (helloworlwh@163.com)
+ * @since 2024/10/31
  */
 public class PrintInterfaceUtil {
     //private static Logger logger = LoggerFactory.getLogger(PrintInterfaceUtil.class);

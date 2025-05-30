@@ -4,19 +4,23 @@ import cn.hutool.core.util.StrUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.hao.annotation.LogDefine;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
 /**
- * Description:
- * ClassName: MyAspect
- * Author: wanghao
- * date: 2021.07.22 10:07
- * version: 1.0
+ * 日志切面类，用于拦截带有 {@link LogDefine} 注解的方法，
+ * 实现方法执行前后的自定义日志记录逻辑。
+ *
+ * <p>该切面依赖于 {@link LogDefineConfig} 提供具体的日志处理行为，
+ * 支持在方法执行前后插入自定义操作。</p>
+ *
+ * @author wanghao
+ * @version 1.0
+ * @since 2021.07.22
  */
 @Aspect
 @Component
@@ -24,17 +28,22 @@ public class LogAspect {
 
     private LogDefineConfig logDefineConfig;
 
-
     public LogAspect(LogDefineConfig logDefineConfig) {
         this.logDefineConfig = logDefineConfig;
     }
 
-    @Around("@annotation(logDefine)")
-    public Object printLnTimeAround(ProceedingJoinPoint joinPoint, LogDefine logDefine) throws Throwable {
-        Class<?> aClass = joinPoint.getTarget().getClass();
-        String className = aClass.getSimpleName();
-        Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
+    @Pointcut("@annotation(org.hao.annotation.LogDefine)")
+    public void logPointCut() {
 
+    }
+
+    @Around("logPointCut()")
+    public Object printLnTimeAround(ProceedingJoinPoint joinPoint) throws Throwable {
+        Class<?> aClass = joinPoint.getTarget().getClass();
+        Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
+        LogDefine logDefine = method.getAnnotation(LogDefine.class);
+
+        String className = aClass.getSimpleName();
         String methodName = StrUtil.isEmpty(logDefine.description()) ? method.getName() : logDefine.description();
 
         logDefineConfig.getBeforeMethod(logDefine.value()).apply(className, methodName, aClass);

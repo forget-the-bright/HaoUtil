@@ -26,10 +26,15 @@ import java.net.URLEncoder;
 import java.util.*;
 
 /**
- * Description TODO
- * Author wanghao(helloworlwh @ 163.com)
- * Date 2024/11/25 下午2:15
+ * 基于 Hutool 的增强工具类，封装了对 Excel 操作、文件下载、数值处理、日期处理等功能的扩展方法。
+ *
+ * <p>该类提供了一系列静态方法，用于简化 Web 场景下的文件导出、样式设置、数据格式化等常见操作，
+ * 并兼容中文环境下的编码与显示问题。</p>
+ *
+ * @author wanghao (helloworlwh@163.com)
+ * @since 2024/11/25
  */
+
 public class HutoolPlus {
 
     //region 下载相关

@@ -10,10 +10,15 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Description 线程操作工具类
- * Author wanghao(helloworlwh @ 163.com)
- * Date 2024/5/30 16:51
+ * 线程操作工具类，提供线程池管理、请求上下文获取及线程执行等待等通用方法。
+ *
+ * <p>该类封装了创建和管理线程池、获取当前请求/响应对象以及等待线程池任务完成的功能，
+ * 适用于多线程场景下的任务调度与上下文传递。</p>
+ *
+ * @author wanghao (helloworlwh@163.com)
+ * @since 2024/5/30
  */
+
 public class ThreadUtil {
     public static ThreadPoolExecutor getTheadPool() {
         return ThreadUtil.getTheadPool(5);

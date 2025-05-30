@@ -20,11 +20,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * ExpressionUtil 是一个用于处理表达式的工具类
+ * 基于 MVEL 表达式引擎的工具类，用于编译、执行动态表达式，并支持内置函数与全局变量管理。
  *
- * @author wanghao(helloworlwh @ 163.com)
- * date 2024/12/3 下午5:45
+ * <p>该类封装了对表达式的解析、执行以及上下文管理逻辑，适用于规则引擎、动态脚本等场景，
+ * 支持扩展自定义函数和变量。</p>
+ *
+ * @author wanghao (helloworlwh@163.com)
+ * @since 2024/12/3
  */
+
 public class ExpressionUtil {
 
     // 初始化规则模板

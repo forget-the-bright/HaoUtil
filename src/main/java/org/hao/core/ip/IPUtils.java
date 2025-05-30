@@ -12,9 +12,19 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 
+/**
+ * IP 地址工具类，提供本地 IP 获取、所有网卡 IP 收集及 HTTP 请求客户端 IP 识别功能。
+ *
+ * <p>该类封装了从不同网络接口获取 IP 地址的方法，并支持通过请求头信息提取客户端真实 IP，
+ * 常用于日志记录、权限控制、服务注册等场景。</p>
+ *
+ * @author wanghao (helloworlwh@163.com)
+ * @since 2024/5/30
+ */
 
 public class IPUtils {
     private static Logger logger = LoggerFactory.getLogger(IPUtils.class);
@@ -68,6 +78,7 @@ public class IPUtils {
         } catch (SocketException e) {
             e.printStackTrace();
         }
+        ipAddresses.sort(Comparator.comparing(String::toString));
         return ipAddresses;
     }
 

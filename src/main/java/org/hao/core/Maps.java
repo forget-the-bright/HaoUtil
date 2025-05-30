@@ -8,12 +8,16 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Description:
- * ClassName: Maps
- * Author: wanghao
- * date: 2021.12.13 11:27
- * version: 1.0
+ * 提供多种方式构建和操作 {@link Map} 的工具类，支持将键值对数组转换为 Map 及其子类实例。
+ *
+ * <p>该类封装了创建、填充 Map 对象的常用方法，适用于快速构造带初始值的 Map 结构，
+ * 支持泛型映射及通过类类型返回指定 Map 实现。</p>
+ *
+ * @author wanghao
+ * @version 1.0
+ * @since 2021.12.13
  */
+
 public class Maps {
     public static Map<String, Object> asMap(Object[]... entrys) {
         return asMap(Arrays.asList(entrys));

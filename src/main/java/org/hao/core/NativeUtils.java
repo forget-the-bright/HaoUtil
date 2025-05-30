@@ -10,9 +10,15 @@ import java.io.InputStream;
 import java.nio.file.*;
 
 /**
- * author:wanghao
- * create:2021-12-16 15:33:46
+ * 本地资源工具类，提供从 JAR 包中加载本地库（如 DLL、SO 文件）的功能。
+ *
+ * <p>该类封装了将资源文件从类路径复制到临时目录并加载本地库的逻辑，
+ * 支持跨平台操作，并确保临时文件在使用后正确删除。</p>
+ *
+ * @author wanghao
+ * @since 2021-12-16
  */
+
 public class NativeUtils {
     /**
      * The minimum length a prefix for a file has to have according to {@link File#createTempFile(String, String)}}.

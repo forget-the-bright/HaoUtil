@@ -4,6 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.hao.config.HaoUtilProperties;
 import org.springframework.scheduling.annotation.Async;
 
 import javax.websocket.Session;
@@ -18,10 +19,15 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class WSUtil {
+    private ScheduledExecutorService pushScheduler;
 
+    public WSUtil(HaoUtilProperties haoUtilProperties) {
+        int wsSchedulerPoolSize = haoUtilProperties.getWsSchedulerPoolSize();
+        if (wsSchedulerPoolSize <= 0) wsSchedulerPoolSize = 1000;
+        // 为每个 WebSocket 连接创建独立任务，并提交到共享线程池
+        pushScheduler = Executors.newScheduledThreadPool(wsSchedulerPoolSize); // 假设支持1000并发
+    }
 
-    // 为每个 WebSocket 连接创建独立任务，并提交到共享线程池
-    ScheduledExecutorService pushScheduler = Executors.newScheduledThreadPool(1000); // 假设支持1000并发
 
     /**
      * 定时发送消息到指定会话
@@ -76,8 +82,8 @@ public class WSUtil {
      * @param getMessage     消息生成器，用于获取要发送的消息内容
      */
     @SneakyThrows
-    @Async
     @Deprecated
+    @Async
     public void poolSendMessage(Session session, Integer intervalSecond, Supplier<String> getMessage) {
         while (true) {
             // 检查会话是否仍然开启，如果未开启则退出循环

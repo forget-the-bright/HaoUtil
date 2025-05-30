@@ -12,7 +12,7 @@ import java.util.TimeZone;
 
 
 /**
- * TODO
+ * 自定义日志配置类
  *
  * @author wanghao(helloworlwh @ 163.com)
  * @since 2025/4/24 下午5:13
