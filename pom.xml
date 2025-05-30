@@ -6,7 +6,9 @@
 
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.14</version>
+    <!--20250530 mvn中央仓库要求包括项目名称属性。不然无法发布-->
+    <name>HaoUtil</name>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -18,7 +20,7 @@
         <hutool.version>5.8.25</hutool.version>
         <poi.version>4.1.2</poi.version>
     </properties>
-    <description> 简单的复用项目中常用的工具 </description>
+    <description>简单的复用项目中常用的工具</description>
     <url>https://github.com/forget-the-bright/HaoUtil</url>
     <dependencyManagement>
         <dependencies>
@@ -106,7 +108,7 @@
             <groupId>org.mvel</groupId>
             <artifactId>mvel2</artifactId>
             <version>2.5.2.Final</version>
-<!--            <optional>true</optional>-->
+            <!--            <optional>true</optional>-->
             <scope>compile</scope>
         </dependency>
 
