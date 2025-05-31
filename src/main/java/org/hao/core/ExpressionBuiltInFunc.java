@@ -16,175 +16,232 @@ import java.util.Date;
 
 public class ExpressionBuiltInFunc {
 
-    // 相加
+    /**
+     * 返回两个双精度浮点数的和。
+     *
+     * @param a 第一个加数
+     * @param b 第二个加数
+     * @return 两数之和
+     */
     public static double add(double a, double b) {
         return a + b;
     }
 
-    // 相减
+    /**
+     * 返回两个双精度浮点数的差。
+     *
+     * @param a 被减数
+     * @param b 减数
+     * @return 差值
+     */
     public static double sub(double a, double b) {
         return a - b;
     }
 
-    // 打印
+    /**
+     * 打印指定对象到控制台。
+     *
+     * @param obj 要打印的对象
+     */
     public static void print(Object obj) {
         System.out.println(obj);
     }
 
     /**
-     * 向上取整
-     * 使用 java.lang.Math.ceil() 来向上取整
+     * 返回大于或等于指定双精度浮点数的最小整数。
+     *
+     * @param a 要向上取整的数值
+     * @return 向上取整后的结果
      */
     public static double ceil(double a) {
         return java.lang.Math.ceil(a);
     }
 
     /**
-     * 向下取整
-     * 使用 java.lang.Math.floor() 来向下取整
+     * 返回小于或等于指定双精度浮点数的最大整数。
+     *
+     * @param a 要向下取整的数值
+     * @return 向下取整后的结果
      */
     public static double floor(double a) {
         return java.lang.Math.floor(a);
     }
 
     /**
-     * 四舍五入
-     * 使用 java.lang.Math.round() 进行四舍五入
+     * 返回最接近指定双精度浮点数的长整型数值。
+     *
+     * @param a 要四舍五入的数值
+     * @return 四舍五入后的结果
      */
     public static long round(double a) {
         return java.lang.Math.round(a);
     }
 
     /**
-     * 获取最大值
-     * 使用 java.lang.Math.max() 获取最大值
+     * 返回两个整数中的最大值。
+     *
+     * @param a 第一个整数
+     * @param b 第二个整数
+     * @return 最大值
      */
     public static int max(int a, int b) {
         return java.lang.Math.max(a, b);
     }
 
     /**
-     * 获取最小值
-     * 使用 java.lang.Math.min() 获取最小值
+     * 返回两个整数中的最小值。
+     *
+     * @param a 第一个整数
+     * @param b 第二个整数
+     * @return 最小值
      */
     public static int min(int a, int b) {
         return java.lang.Math.min(a, b);
     }
 
     /**
-     * 求幂 (base^exp)
-     * 使用 java.lang.Math.pow() 计算 base 的 exp 次幂
+     * 返回底数的指数次幂。
+     *
+     * @param base 底数
+     * @param exp  指数
+     * @return 结果值
      */
     public static double power(double base, double exp) {
         return java.lang.Math.pow(base, exp);
     }
 
     /**
-     * 求平方根
-     * 使用 java.lang.Math.sqrt() 来计算平方根
+     * 返回指定双精度浮点数的平方根。
+     *
+     * @param a 非负数
+     * @return 平方根
      */
     public static double sqrt(double a) {
         return java.lang.Math.sqrt(a);
     }
 
     /**
-     * 获取随机数
-     * 使用 java.lang.Math.random() 生成随机数
+     * 返回一个介于 0.0（包含）和 1.0（不包含）之间的随机双精度浮点数。
+     *
+     * @return 随机数
      */
     public static double random() {
         return java.lang.Math.random();
     }
 
     /**
-     * 计算正弦
-     * 使用 java.lang.Math.sin() 计算正弦（弧度制）
+     * 返回指定弧度角的正弦值。
+     *
+     * @param a 弧度
+     * @return 正弦值
      */
     public static double sin(double a) {
         return java.lang.Math.sin(a);
     }
 
     /**
-     * 计算余弦
-     * 使用 java.lang.Math.cos() 计算余弦（弧度制）
+     * 返回指定弧度角的余弦值。
+     *
+     * @param a 弧度
+     * @return 余弦值
      */
     public static double cos(double a) {
         return java.lang.Math.cos(a);
     }
 
     /**
-     * 计算正切
-     * 使用 java.lang.Math.tan() 计算正切（弧度制）
+     * 返回指定弧度角的正切值。
+     *
+     * @param a 弧度
+     * @return 正切值
      */
     public static double tan(double a) {
         return java.lang.Math.tan(a);
     }
 
     /**
-     * 求自然对数
-     * 使用 java.lang.Math.log() 计算自然对数
+     * 返回指定双精度浮点数的自然对数。
+     *
+     * @param a 正数
+     * @return 自然对数
      */
     public static double log(double a) {
         return java.lang.Math.log(a);
     }
 
     /**
-     * 求以10为底的对数
-     * 使用 java.lang.Math.log10() 计算以 10 为底的对数
+     * 返回指定双精度浮点数以 10 为底的对数。
+     *
+     * @param a 正数
+     * @return 以 10 为底的对数
      */
     public static double log10(double a) {
         return java.lang.Math.log10(a);
     }
 
     /**
-     * 求指数 (e^x)
-     * 使用 java.lang.Math.exp() 计算 e^x
+     * 返回 e 的指定幂次方。
+     *
+     * @param a 指数
+     * @return e 的 a 次幂
      */
     public static double exp(double a) {
         return java.lang.Math.exp(a);
     }
 
     /**
-     * 求反正弦
-     * 使用 java.lang.Math.asin() 计算反正弦（弧度制）
+     * 返回指定双精度浮点数的反正弦值。
+     *
+     * @param a 范围在 [-1, 1] 内的数值
+     * @return 反正弦值（弧度）
      */
     public static double asin(double a) {
         return java.lang.Math.asin(a);
     }
 
     /**
-     * 求反余弦
-     * 使用 java.lang.Math.acos() 计算反余弦（弧度制）
+     * 返回指定双精度浮点数的反余弦值。
+     *
+     * @param a 范围在 [-1, 1] 内的数值
+     * @return 反余弦值（弧度）
      */
     public static double acos(double a) {
         return java.lang.Math.acos(a);
     }
 
     /**
-     * 求反正切
-     * 使用 java.lang.Math.atan() 计算反正切（弧度制）
+     * 返回指定双精度浮点数的反正切值。
+     *
+     * @param a 任意数值
+     * @return 反正切值（弧度）
      */
     public static double atan(double a) {
         return java.lang.Math.atan(a);
     }
 
     /**
-     * 求坐标点 (x, y) 和 x 轴的夹角
-     * 使用 java.lang.Math.atan2() 计算坐标 (x, y) 和 x 轴的夹角（弧度制）
+     * 返回坐标点 (x, y) 和 x 轴的夹角。
+     *
+     * @param y 坐标点的 y 值
+     * @param x 坐标点的 x 值
+     * @return 夹角（弧度）
      */
     public static double atan2(double y, double x) {
         return java.lang.Math.atan2(y, x);
     }
 
     /**
-     * 去掉小数部分
-     * 使用 java.lang.Math.floor() 去掉小数部分
+     * 去掉小数部分，返回整数部分。
+     *
+     * @param a 任意双精度浮点数
+     * @return 整数部分
      */
     public static double trunc(double a) {
         return java.lang.Math.floor(a);
     }
 
     /**
-     * 获取当前日期时间
+     * 获取当前日期时间。
      *
      * @return 当前日期时间
      */
