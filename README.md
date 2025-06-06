@@ -355,7 +355,7 @@ int poolSize = haoUtilProperties.getWsSchedulerPoolSize();
 <dependency>
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.15.1</version>
+    <version>1.0.15.2</version>
 </dependency>
 ```
 
