@@ -1,4 +1,4 @@
-package org.hao.spring;
+package org.hao.core.ws;
 
 import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.core.util.ObjectUtil;
@@ -26,7 +26,7 @@ public class WSUtil {
 
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNamePrefix("WS-Push-Pool-%d").build();
         int corePoolSize = haoUtilProperties.getWsSchedulerPoolSize();
-        if (corePoolSize <= 0) corePoolSize = 1000;
+        if (corePoolSize <= 0) corePoolSize = Runtime.getRuntime().availableProcessors() * 2;
         // 为每个 WebSocket 连接创建独立任务，并提交到共享线程池
         pushScheduler = Executors.newScheduledThreadPool(corePoolSize, threadFactory); // 假设支持1000并发
     }
@@ -43,32 +43,73 @@ public class WSUtil {
      * @param getMessage     一个供应商函数，用于提供要发送的消息内容
      */
     public void schedulerSendMessage(Session session, Integer intervalSecond, Supplier<String> getMessage) {
-        // 安排一个定时任务，按照固定的时间间隔执行
-        ScheduledFuture<?> scheduledFuture = pushScheduler.scheduleAtFixedRate(() -> {
-            // 检查会话是否仍然开放
-            if (!session.isOpen()) {
-                // 如果会话已关闭，尝试取消之前的调度任务
-                ScheduledFuture<?> future = (ScheduledFuture<?>) session.getUserProperties().get("task");
-                System.out.println(session);
-                if (future != null) {
-                    // 如果任务正在执行，不会中断它，而是让它继续执行完成；然后关闭任务。
-                    future.cancel(false);
-                }
-                return;
-            }
+        /* 安排一个定时任务，按照固定的时间间隔执行
+         * scheduleWithFixedDelay 这个方法会在每次任务执行完毕后等待指定的延迟时间（delay），然后才开始下一次任务的调度。
+         * - 任务串行执行：确保每次任务完成后，经过固定的延迟时间才会启动下一次任务
+         * - 适合场景：当任务的执行时间可能变化不定，并且你希望避免多个任务实例同时运行时非常有用。例如，处理外部资源请求、数据库操作等。
+         * scheduleAtFixedRate 这个方法会按照固定的频率（period）来执行任务，即每隔指定的周期时间就会尝试开始执行一次任务。
+         * - 任务可以并发执行：如果任务的执行时间超过了设定的周期时间，下一次任务仍将在预定的时间点开始执行。这意味着，在某些情况下可能会有多个任务实例并发执行
+         * - 适合场景：当你需要保证任务以固定的速率执行，而不管前一个任务是否完成时使用。例如，定时轮询某个资源的状态更新情况。
+         */
+        ScheduledFuture<?> scheduledFuture = pushScheduler.scheduleWithFixedDelay(() -> {
+            //Java 的定时任务一旦在执行过程中抛出未捕获的异常，整个任务就会终止，后续不再执行。 done = true; 异常终止不会再次执行，这里要try   catch 捕获
             try {
-                // 获取供应商提供的消息内容
-                String message = getMessage.get();
-                // 尝试发送消息
-                WSUtil.sendMessage(session, message);
+                // 检查会话是否仍然开放
+                if (!session.isOpen()) {
+                    // 如果会话已关闭，尝试取消之前的调度任务
+                    ScheduledFuture<?> future = (ScheduledFuture<?>) session.getUserProperties().get("task");
+                    System.out.println(session);
+                    if (future != null) {
+                        // 如果任务正在执行，不会中断它，而是让它继续执行完成；然后关闭任务。
+                        future.cancel(false);
+                    }
+                    return;
+                }
+                try {
+                    // 获取供应商提供的消息内容
+                    String message = getMessage.get();
+                    // 尝试发送消息
+                    WSUtil.sendMessage(session, message);
+                } catch (Exception e) {
+                    // 如果发送消息时发生异常，打印异常信息并将异常消息发送给会话
+                    e.printStackTrace();
+                    WSUtil.sendMessage(session, e.getMessage());
+                }
             } catch (Exception e) {
-                // 如果发送消息时发生异常，打印异常信息并将异常消息发送给会话
                 e.printStackTrace();
-                WSUtil.sendMessage(session, e.getMessage());
             }
         }, 0, intervalSecond, TimeUnit.SECONDS);
         // 将新创建的调度任务存储在会话的用户属性中，以便后续可能的取消操作
         session.getUserProperties().put("task", scheduledFuture);
+    }
+
+    /**
+     * 定义一个定时任务，按照固定的时间间隔执行给定的任务
+     * 该方法使用了scheduleWithFixedDelay方法来安排任务，这意味着每次任务执行完毕后会等待指定的延迟时间，然后才开始下一次任务的调度
+     * 这种方式适合于当任务的执行时间可能变化不定，并且你希望避免多个任务实例同时运行时的场景
+     *
+     * @param intervalSecond 任务之间的时间间隔，以秒为单位
+     * @param getMessage     一个Supplier函数式接口实例，用于获取任务执行时需要处理的消息
+     * @return 返回一个ScheduledFuture对象，表示已安排的定时任务
+     */
+    public ScheduledFuture<?> defineScheduledTask(Integer intervalSecond, Runnable getMessage) {
+        /* 安排一个定时任务，按照固定的时间间隔执行
+         * scheduleWithFixedDelay 这个方法会在每次任务执行完毕后等待指定的延迟时间（delay），然后才开始下一次任务的调度。
+         * - 任务串行执行：确保每次任务完成后，经过固定的延迟时间才会启动下一次任务
+         * - 适合场景：当任务的执行时间可能变化不定，并且你希望避免多个任务实例同时运行时非常有用。例如，处理外部资源请求、数据库操作等。
+         * scheduleAtFixedRate 这个方法会按照固定的频率（period）来执行任务，即每隔指定的周期时间就会尝试开始执行一次任务。
+         * - 任务可以并发执行：如果任务的执行时间超过了设定的周期时间，下一次任务仍将在预定的时间点开始执行。这意味着，在某些情况下可能会有多个任务实例并发执行
+         * - 适合场景：当你需要保证任务以固定的速率执行，而不管前一个任务是否完成时使用。例如，定时轮询某个资源的状态更新情况。
+         */
+        ScheduledFuture<?> scheduledFuture = pushScheduler.scheduleWithFixedDelay(() -> {
+            //Java 的定时任务一旦在执行过程中抛出未捕获的异常，整个任务就会终止，后续不再执行。 done = true; 异常终止不会再次执行，这里要try   catch 捕获
+            try {
+                getMessage.run();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 0, intervalSecond, TimeUnit.SECONDS);
+        return scheduledFuture;
     }
 
     /**
@@ -296,5 +337,6 @@ public class WSUtil {
             throw new RuntimeException(e);
         }
     }
+
 
 }
