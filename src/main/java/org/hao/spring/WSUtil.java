@@ -1,5 +1,6 @@
 package org.hao.spring;
 
+import cn.hutool.core.thread.ThreadFactoryBuilder;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.SneakyThrows;
@@ -22,10 +23,12 @@ public class WSUtil {
     private ScheduledExecutorService pushScheduler;
 
     public WSUtil(HaoUtilProperties haoUtilProperties) {
-        int wsSchedulerPoolSize = haoUtilProperties.getWsSchedulerPoolSize();
-        if (wsSchedulerPoolSize <= 0) wsSchedulerPoolSize = 1000;
+
+        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNamePrefix("WS-Push-Pool-%d").build();
+        int corePoolSize = haoUtilProperties.getWsSchedulerPoolSize();
+        if (corePoolSize <= 0) corePoolSize = 1000;
         // 为每个 WebSocket 连接创建独立任务，并提交到共享线程池
-        pushScheduler = Executors.newScheduledThreadPool(wsSchedulerPoolSize); // 假设支持1000并发
+        pushScheduler = Executors.newScheduledThreadPool(corePoolSize, threadFactory); // 假设支持1000并发
     }
 
 
@@ -242,8 +245,13 @@ public class WSUtil {
      */
     public static void sendMessage(Session session, String message) {
         if (session.isOpen()) {
-            // 发送消息
-            session.getAsyncRemote().sendText(message);
+            try {
+                // 发送消息
+                session.getAsyncRemote().sendText(message);
+            } finally {
+
+            }
+
         }
     }
 

@@ -16,7 +16,8 @@ public class HaoUtilProperties {
     private boolean enabled;
     private boolean printInterface;
     private boolean enableWs = false;
-    private int wsSchedulerPoolSize = 1000;
+    //通常建议根据你的服务器核心数设置
+    private int wsSchedulerPoolSize = Runtime.getRuntime().availableProcessors() * 2;
 
     public boolean isPrintInterface() {
         return printInterface;

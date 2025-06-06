@@ -42,11 +42,12 @@ public class SpringRunUtil {
         String path = SpringUtil.getProperty("server.servlet.context-path");
         String applicationName = SpringUtil.getApplicationName();
         path = path == null ? "" : path.equals("") ? "" : path;
-        String printStr = "\n----------------------------------------------------------\n\t" +
-                "Application " + applicationName + " is running! Access URLs:\n\t" +
-                "Swagger-ui: \thttp://localhost:" + port + path + "/swagger-ui.html\n\t" +
-                "Doc文档: \t\thttp://localhost:" + port + path + "/doc.html\n\t" +
-                "Local: \t\t\thttp://localhost:" + port + path + "/\n\t";
+        String printStr =
+                "\n----------------------------------------------------------\n\t" +
+                        "Application " + applicationName + " is running! Access URLs:\n\t" +
+                        "Swagger-ui: \thttp://localhost:" + port + path + "/swagger-ui.html\n\t" +
+                        "Doc文档: \t\thttp://localhost:" + port + path + "/doc.html\n\t" +
+                        "Local: \t\t\thttp://localhost:" + port + path + "/\n\t";
         int allIpSize = allIP.size();
         PrintUtil[] values = PrintUtil.values();
 
