@@ -18,7 +18,11 @@
         <spring-cloud.version>2021.0.3</spring-cloud.version>
         <swagger.core.version>1.6.2</swagger.core.version>
         <hutool.version>5.8.25</hutool.version>
+        <lombok.version>1.18.30</lombok.version>
         <poi.version>4.1.2</poi.version>
+        <junit.version>5.9.2</junit.version>
+        <mvel.version>2.5.2.Final</mvel.version>
+
     </properties>
     <description>简单的复用项目中常用的工具</description>
     <url>https://github.com/forget-the-bright/HaoUtil</url>
@@ -54,8 +58,57 @@
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-annotations</artifactId>
                 <version>${swagger.core.version}</version>
-                <type>pom</type> <!-- 指明这是一个 POM 文件 -->
-                <scope>import</scope> <!-- 指定导入作用域 -->
+<!--                <type>pom</type> &lt;!&ndash; 指明这是一个 POM 文件 &ndash;&gt;-->
+                <optional>true</optional>
+                <scope>provided</scope> <!-- 指定导入作用域 -->
+            </dependency>
+
+            <!--表达式解析库-->
+            <dependency>
+                <groupId>org.mvel</groupId>
+                <artifactId>mvel2</artifactId>
+                <version>${mvel.version}</version>
+                <!--            <optional>true</optional>-->
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+                <optional>true</optional>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <optional>true</optional>
+                <scope>provided</scope>
+                <version>${hutool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- JUnit 5 -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>5.9.0</version> <!-- 请根据需要选择最新版本 -->
+                <optional>true</optional>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>5.9.0</version>
+                <optional>true</optional>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -99,56 +152,40 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
-            <optional>true</optional>
-            <scope>provided</scope>
-            <version>${hutool.version}</version>
         </dependency>
+
         <!--表达式解析库-->
         <dependency>
             <groupId>org.mvel</groupId>
             <artifactId>mvel2</artifactId>
-            <version>2.5.2.Final</version>
-            <!--            <optional>true</optional>-->
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>${poi.version}</version>
-            <optional>true</optional>
-            <scope>provided</scope>
         </dependency>
-
 
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>${swagger.core.version}</version>
-            <optional>true</optional>
-            <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
         </dependency>
-
 
         <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.9.0</version> <!-- 请根据需要选择最新版本 -->
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.9.0</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
+
 
 
     <developers>
@@ -185,7 +222,6 @@
         </repository>
     </distributionManagement>
 
-
     <build>
         <plugins>
             <plugin>
@@ -199,10 +235,7 @@
                      -->
                     <skip>true</skip>
                 </configuration>
-
             </plugin>
-
-
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
@@ -217,7 +250,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.5</version>
+                <version>3.2.7</version>
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
@@ -227,16 +260,15 @@
                         </goals>
                         <configuration>
                             <keyname>${gpg.keyname}</keyname>
-
+                            <passphrase>${gpg.passphrase}</passphrase>
                         </configuration>
-
                     </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
+                <version>3.3.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -247,11 +279,10 @@
                 </executions>
             </plugin>
 
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+                <version>3.11.2</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -261,8 +292,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-
         </plugins>
     </build>
 

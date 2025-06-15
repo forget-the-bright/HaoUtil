@@ -10,7 +10,7 @@ public class CompilerUtil {
     private static final Map<String, Class<?>> classCache = new ConcurrentHashMap<>();
 
     public static Class<?> compileAndLoadClass(String className, String javaCode) throws Exception {
-        return compileAndLoadClass(className, javaCode, null);
+        return compileAndLoadClass(className, javaCode, Thread.currentThread().getContextClassLoader());
     }
 
     /**
