@@ -6,7 +6,7 @@
 
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.15.2</version>
+    <version>1.0.15.3</version>
     <!--20250530 mvn中央仓库要求包括项目名称属性。不然无法发布-->
     <name>HaoUtil</name>
 
@@ -221,7 +221,12 @@
             <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-
+    <!--打包命令复制-->
+    <!--清理环境 mvn clean -->
+    <!--清理环境 mvn compile -->
+    <!--关闭测试打包 mvn clean package -D"maven.test.skip"=true   -->
+    <!--关闭测试安装 mvn clean install -D"maven.test.skip"=true    -->
+    <!--关闭测试发布 mvn clean deploy -D"maven.test.skip"=true    -->
     <build>
         <plugins>
             <plugin>

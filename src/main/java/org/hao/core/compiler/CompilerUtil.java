@@ -1,15 +1,23 @@
 package org.hao.core.compiler;
 
+import cn.hutool.core.io.IoUtil;
+import org.hao.core.exception.HaoException;
+
 import javax.tools.*;
+import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class CompilerUtil {
     private static final Map<String, Class<?>> classCache = new ConcurrentHashMap<>();
+    //获取系统 Java 编译器：通过 ToolProvider.getSystemJavaCompiler() 获取编译器实例
+    public static final JavaCompiler SYSTEM_COMPILER = ToolProvider.getSystemJavaCompiler();
 
-    public static Class<?> compileAndLoadClass(String className, String javaCode) throws Exception {
+    public static Class<?> compileAndLoadClass(String className, String javaCode) throws ClassNotFoundException {
         return compileAndLoadClass(className, javaCode, Thread.currentThread().getContextClassLoader());
     }
 
@@ -20,44 +28,69 @@ public class CompilerUtil {
      * @param javaCode          Java 源代码字符串
      * @param parentClassLoader 父类加载器
      * @return 编译后的 Class 对象
-     * @throws Exception 如果编译失败或加载失败
+     * @throws ClassNotFoundException 如果类未找到
      */
-    public static Class<?> compileAndLoadClass(String className, String javaCode, ClassLoader parentClassLoader) throws Exception {
+    public static Class<?> compileAndLoadClass(String className, String javaCode, ClassLoader parentClassLoader) throws ClassNotFoundException {
         // 获取系统自带的 Java 编译器
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        if (compiler == null) {
+        if (SYSTEM_COMPILER == null) {
             throw new RuntimeException("无法获取 Java 编译器，请确保使用的是 JDK 而不是 JRE");
         }
 
-        // 创建内存中的 Java 文件对象
-        InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
+        // 构建内存文件管理器：使用 InMemoryJavaFileManager 管理源码与字节码的内存存储
+        InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(SYSTEM_COMPILER.getStandardFileManager(null, null, null));
         List<JavaFileObject> compilationUnits = Arrays.asList(new JavaSourceFromString(className, javaCode));
 
         // 执行编译任务
-        JavaCompiler.CompilationTask task = compiler.getTask(
-                null,
-                fileManager,
-                null,
-                null,
-                null,
-                compilationUnits);
-        boolean success = task.call();
-        if (!success) {
-            throw new RuntimeException("Compilation failed");
-        }
+        // 构造编译任务：将输入的 Java 源码字符串封装为 JavaFileObject 并设置编译参数
+        // 创建一个诊断收集器，用于收集编译过程中的信息
+        DiagnosticCollector<? super JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
+        // 创建一个选项列表，用于配置编译任务的参数
+        List<String> options = new ArrayList<>();
 
+        // 获取一个编译任务实例
+        // 此处省略了SYSTEM_COMPILER和fileManager的初始化过程
+        JavaCompiler.CompilationTask task = SYSTEM_COMPILER.getTask(
+                (Writer) null, // 不使用Writer对象
+                fileManager, // 文件管理器，负责管理编译过程中的文件
+                diagnosticCollector, // 诊断收集器，收集编译信息
+                options, // 编译选项
+                (Iterable) null, // 不使用类路径入口
+                compilationUnits); // 编译单元集合，包含需要编译的Java源文件
+        // 尝试执行编译任务
+        try {
+            // 如果编译失败
+            if (!task.call()) {
+                // 抛出异常，包含编译失败的详细信息
+                throw new HaoException("编译失败: " + getDiagnosticMessages(diagnosticCollector));
+            }
+        } finally {
+            // 确保文件管理器被正确关闭，释放资源
+            IoUtil.close(fileManager);
+        }
         // 创建类加载器并加载编译后的类
+        // 如果未指定父类加载器，则使用当前线程的上下文类加载器
         if (parentClassLoader == null) {
             parentClassLoader = Thread.currentThread().getContextClassLoader();
         }
+
+        // 创建自定义的类加载器实例，用于加载内存中的字节码
         InMemoryClassLoader classLoader = new InMemoryClassLoader(parentClassLoader);
+
+        // 遍历已编译的类集合，将每个类的字节码添加到类加载器中
         for (Map.Entry<String, InMemoryJavaFileManager.ByteCodeJavaFileObject> entry : fileManager.getCompiledClasses().entrySet()) {
             classLoader.addClassBytes(entry.getKey(), entry.getValue().getByteCode());
         }
+
+        // 使用自定义类加载器加载指定名称的类
         Class<?> aClass = classLoader.loadClass(className);
+
+        // 将加载的类缓存起来，以便后续使用
         classCache.put(className, aClass);
+
+        // 返回加载的类
         return aClass;
     }
+
 
     /**
      * 根据类名从缓存中创建实例。
@@ -66,11 +99,16 @@ public class CompilerUtil {
      * @return 类实例
      * @throws Exception 如果类未找到或实例化失败
      */
-    public Object createInstance(String className) throws Exception {
+    public static Object createInstance(String className) throws Exception {
         Class<?> clazz = classCache.get(className);
         if (clazz == null) {
             throw new IllegalArgumentException("Class not found: " + className);
         }
         return clazz.getDeclaredConstructor().newInstance();
+    }
+
+    public static String getDiagnosticMessages(DiagnosticCollector<?> collector) {
+        List<?> diagnostics = collector.getDiagnostics();
+        return diagnostics.stream().map(String::valueOf).collect(Collectors.joining(System.lineSeparator()));
     }
 }
