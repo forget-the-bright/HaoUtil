@@ -363,12 +363,9 @@ int poolSize = haoUtilProperties.getWsSchedulerPoolSize();
 
 在你的主类或配置类上添加：
 
-```java
-
-@EnableHaoUtil
-@SpringBootApplication
-public class Application {
-}
+```yaml
+hao-util:
+  enabled: true
 ```
 
 ### 步骤 3：配置选项（可选）

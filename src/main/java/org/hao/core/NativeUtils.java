@@ -22,6 +22,7 @@ import java.nio.file.*;
 public class NativeUtils {
     /**
      * The minimum length a prefix for a file has to have according to {@link File#createTempFile(String, String)}}.
+     * 根据 {@link File#createTempFile(String, String)} 的规定，用于创建临时文件的前缀字符串必须满足的最小长度要求。
      */
     private static final int MIN_PREFIX_LENGTH = 3;
     public static final String NATIVE_FOLDER_PATH_PREFIX = "nativeutils";
