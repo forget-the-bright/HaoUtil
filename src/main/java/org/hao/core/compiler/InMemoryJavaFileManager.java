@@ -3,10 +3,12 @@ package org.hao.core.compiler;
 import javax.tools.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class InMemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
 
@@ -19,6 +21,7 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileM
     public Map<String, ByteCodeJavaFileObject> getCompiledClasses() {
         return compiledClasses;
     }
+
 
     @Override
     public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) {

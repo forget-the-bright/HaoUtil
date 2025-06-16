@@ -24,16 +24,18 @@ import java.util.function.Consumer;
 
 public class SpringRunUtil {
     private static Logger logger = LoggerFactory.getLogger(SpringRunUtil.class);
+    public static Class<?> startUpClass = null;
 
     public static void runAfter(Class<?> primarySource, String[] args, Consumer<ConfigurableApplicationContext> consumer) {
         ConfigurableApplicationContext application = SpringApplication.run(primarySource, args);
         consumer.accept(application);
         printRunInfo();
+        startUpClass = primarySource;
     }
 
     public static void runAfter(Class<?> primarySource, String[] args) {
-        SpringApplication.run(primarySource, args);
-        printRunInfo();
+        runAfter(primarySource, args, application -> {
+        });
     }
 
     public static void printRunInfo() {

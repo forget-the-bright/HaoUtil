@@ -48,6 +48,7 @@ public class TestCompilerJob {
      */
     @Test
     public void testHaoCompliler() throws Exception {
+        CompilerUtil.buildClassPath();
         long start = System.currentTimeMillis();
         String className = "com.example.demo.Greeter";
         String javaCode = "package com.example.demo;\n" +

@@ -1,10 +1,15 @@
 package org.hao.core.compiler;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.ReflectUtil;
 import org.hao.core.exception.HaoException;
 
 import javax.tools.*;
+import java.io.File;
 import java.io.Writer;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +21,23 @@ public class CompilerUtil {
     private static final Map<String, Class<?>> classCache = new ConcurrentHashMap<>();
     //获取系统 Java 编译器：通过 ToolProvider.getSystemJavaCompiler() 获取编译器实例
     public static final JavaCompiler SYSTEM_COMPILER = ToolProvider.getSystemJavaCompiler();
+    public static final List<String> classpath = loadClassPath();
+
+    public static List<String> loadClassPath() {
+        List<String> classpath = new ArrayList<>();
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        while (true) {
+            if (contextClassLoader == null) break;
+            Object ucp = ReflectUtil.getFieldValue(contextClassLoader, "ucp");
+            List<Object> loaders = (ArrayList) ReflectUtil.getFieldValue(ucp, "loaders");
+            if (CollUtil.isNotEmpty(loaders)){
+
+            }
+            contextClassLoader = contextClassLoader.getParent();
+        }
+
+        return classpath;
+    }
 
     public static Class<?> compileAndLoadClass(String className, String javaCode) throws ClassNotFoundException {
         return compileAndLoadClass(className, javaCode, Thread.currentThread().getContextClassLoader());
@@ -46,7 +68,11 @@ public class CompilerUtil {
         DiagnosticCollector<? super JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
         // 创建一个选项列表，用于配置编译任务的参数
         List<String> options = new ArrayList<>();
-
+        if (CollUtil.isNotEmpty(classpath)){
+          // options.add("-cp");
+          //  options.add(String.join(File.pathSeparator, classpath));
+           // System.out.println( options);
+        }
         // 获取一个编译任务实例
         // 此处省略了SYSTEM_COMPILER和fileManager的初始化过程
         JavaCompiler.CompilationTask task = SYSTEM_COMPILER.getTask(
@@ -110,5 +136,30 @@ public class CompilerUtil {
     public static String getDiagnosticMessages(DiagnosticCollector<?> collector) {
         List<?> diagnostics = collector.getDiagnostics();
         return diagnostics.stream().map(String::valueOf).collect(Collectors.joining(System.lineSeparator()));
+    }
+
+
+    /**
+     * 构建 classpath：当前项目输出目录 + URLClassLoader 中的所有 jar
+     */
+    public static String buildClassPath() throws Exception {
+        StringBuilder cpBuilder = new StringBuilder();
+
+        // 当前项目的类输出目录（target/classes 或 BOOT-INF/classes）
+        //File outputDir = getOutputDir();
+        //cpBuilder.append(outputDir.getAbsolutePath()).append(File.pathSeparator);
+
+        // 从 URLClassLoader 获取所有依赖 jar
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl instanceof URLClassLoader) {
+            URL[] urls = ((URLClassLoader) cl).getURLs();
+            for (URL url : urls) {
+                if ("file".equals(url.getProtocol()) && url.getPath().endsWith(".jar")) {
+                    cpBuilder.append(new File(url.toURI()).getAbsolutePath()).append(File.pathSeparator);
+                }
+            }
+        }
+
+        return cpBuilder.toString();
     }
 }
