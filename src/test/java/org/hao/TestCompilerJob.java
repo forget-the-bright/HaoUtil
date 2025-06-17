@@ -6,13 +6,14 @@ import org.hao.annotation.LogDefine;
 import org.hao.core.compiler.CompilerUtil;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 @Slf4j
 public class TestCompilerJob {
 
     @Test
-    public  void testHutoolCompiler() throws Exception {
+    public void testHutoolCompiler() throws Exception {
         long start = System.currentTimeMillis();
         String className = "com.example.demo.Greeter";
         String javaCode = "package com.example.demo;\n" +
@@ -22,7 +23,7 @@ public class TestCompilerJob {
                 "import org.hao.annotation.LogDefine;\n" +
                 "\n" +
                 "public class Greeter {\n" +
-                "    @LogDefine(\"123\")        "+
+                "    @LogDefine(\"123\")        " +
                 "    public void sayHello(String name) {\n" +
                 "        System.out.println(\"Hello, \" + name + \"!\");\n" +
                 "        PrintUtil.BLUE.Println(\"name = \" + name);\n" +
@@ -48,7 +49,6 @@ public class TestCompilerJob {
      */
     @Test
     public void testHaoCompliler() throws Exception {
-        CompilerUtil.buildClassPath();
         long start = System.currentTimeMillis();
         String className = "com.example.demo.Greeter";
         String javaCode = "package com.example.demo;\n" +
@@ -58,14 +58,15 @@ public class TestCompilerJob {
                 "import org.hao.annotation.LogDefine;\n" +
                 "\n" +
                 "public class Greeter {\n" +
-                "    @LogDefine(\"123\")        "+
+                "    @LogDefine(\"123\")        " +
                 "    public void sayHello(String name) {\n" +
                 "        System.out.println(\"Hello, \" + name + \"!\");\n" +
                 "        PrintUtil.BLUE.Println(\"name = \" + name);\n" +
                 "        SpringRunUtil.printRunInfo();\n" +
                 "    }\n" +
                 "}";
-
+        String currentWorkingDirectory = System.getProperty("user.dir");
+        System.out.println("Current working directory: " + currentWorkingDirectory);
         // 使用工具类编译并加载类
         Class<?> clazz = CompilerUtil.compileAndLoadClass(className, javaCode);
         long end = System.currentTimeMillis();
@@ -78,5 +79,9 @@ public class TestCompilerJob {
         sayHello.invoke(obj, "World");
     }
 
-
+    @Test
+    public void extractJar() throws IOException {
+        CompilerUtil.extractDependencyJarsToTempDir("D:\\Project\\铜陵\\tl-back-enfi\\enfi-module-system\\enfi-system-start\\target\\enfi-system-start-3.7.0.jar");
+        CompilerUtil.extractDependencyJarsToTempDir("D:\\Project\\铜陵\\tl-back-enfi\\enfi-module-system\\enfi-system-start\\target\\enfi-system-start-3.7.0.jar");
+    }
 }

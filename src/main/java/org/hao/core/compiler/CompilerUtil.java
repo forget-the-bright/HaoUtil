@@ -1,43 +1,34 @@
 package org.hao.core.compiler;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.ReflectUtil;
+import cn.hutool.core.util.StrUtil;
 import org.hao.core.exception.HaoException;
+import org.hao.spring.SpringRunUtil;
+import org.springframework.boot.system.ApplicationHome;
 
 import javax.tools.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public class CompilerUtil {
     private static final Map<String, Class<?>> classCache = new ConcurrentHashMap<>();
     //获取系统 Java 编译器：通过 ToolProvider.getSystemJavaCompiler() 获取编译器实例
     public static final JavaCompiler SYSTEM_COMPILER = ToolProvider.getSystemJavaCompiler();
-    public static final List<String> classpath = loadClassPath();
+    public static final TreeSet<String> classpath = new TreeSet<>();
 
-    public static List<String> loadClassPath() {
-        List<String> classpath = new ArrayList<>();
-        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        while (true) {
-            if (contextClassLoader == null) break;
-            Object ucp = ReflectUtil.getFieldValue(contextClassLoader, "ucp");
-            List<Object> loaders = (ArrayList) ReflectUtil.getFieldValue(ucp, "loaders");
-            if (CollUtil.isNotEmpty(loaders)){
-
-            }
-            contextClassLoader = contextClassLoader.getParent();
-        }
-
-        return classpath;
-    }
 
     public static Class<?> compileAndLoadClass(String className, String javaCode) throws ClassNotFoundException {
         return compileAndLoadClass(className, javaCode, Thread.currentThread().getContextClassLoader());
@@ -68,10 +59,14 @@ public class CompilerUtil {
         DiagnosticCollector<? super JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
         // 创建一个选项列表，用于配置编译任务的参数
         List<String> options = new ArrayList<>();
-        if (CollUtil.isNotEmpty(classpath)){
-          // options.add("-cp");
-          //  options.add(String.join(File.pathSeparator, classpath));
-           // System.out.println( options);
+        if (classpath.isEmpty()) {
+            classpath.clear();
+            classpath.addAll(loadClassPath());
+        }
+        if (CollUtil.isNotEmpty(classpath)) {
+            options.add("-cp");
+            options.add(StrUtil.join(File.pathSeparator, classpath));
+            // System.out.println( options);
         }
         // 获取一个编译任务实例
         // 此处省略了SYSTEM_COMPILER和fileManager的初始化过程
@@ -87,6 +82,8 @@ public class CompilerUtil {
             // 如果编译失败
             if (!task.call()) {
                 // 抛出异常，包含编译失败的详细信息
+                // todo 这里可以做一些处理,比如编译失败，如果是jar环境，可以清理掉temp-classpath 重新解压加载，
+                //  但是问题是，如果代码就是引用了找不到的库，这里重复加载，就会消耗系统性能， 磁盘io
                 throw new HaoException("编译失败: " + getDiagnosticMessages(diagnosticCollector));
             }
         } finally {
@@ -138,28 +135,103 @@ public class CompilerUtil {
         return diagnostics.stream().map(String::valueOf).collect(Collectors.joining(System.lineSeparator()));
     }
 
+    public static TreeSet<String> loadClassPath() {
+        if (null == SpringRunUtil.startUpClass) {
+            return loadLocalClassPath();
+        }
+        ApplicationHome home = new ApplicationHome(SpringRunUtil.startUpClass);
+        String jarBaseFile = home.getSource().getPath();
+        if (jarBaseFile.endsWith(".jar")) {
+            try {
+                return extractDependencyJarsToTempDir(jarBaseFile);
+            } catch (Exception e) {
+                throw new HaoException(e);
+            }
+        } else {
+            return loadLocalClassPath();
+        }
+    }
 
-    /**
-     * 构建 classpath：当前项目输出目录 + URLClassLoader 中的所有 jar
-     */
-    public static String buildClassPath() throws Exception {
-        StringBuilder cpBuilder = new StringBuilder();
+    private static boolean jarFileIsExtract = false;
+    private static String tempDirName;
+    private static String tmpdir = System.getProperties().getProperty("java.io.tmpdir");
 
-        // 当前项目的类输出目录（target/classes 或 BOOT-INF/classes）
-        //File outputDir = getOutputDir();
-        //cpBuilder.append(outputDir.getAbsolutePath()).append(File.pathSeparator);
 
-        // 从 URLClassLoader 获取所有依赖 jar
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        if (cl instanceof URLClassLoader) {
-            URL[] urls = ((URLClassLoader) cl).getURLs();
-            for (URL url : urls) {
-                if ("file".equals(url.getProtocol()) && url.getPath().endsWith(".jar")) {
-                    cpBuilder.append(new File(url.toURI()).getAbsolutePath()).append(File.pathSeparator);
+    public static synchronized TreeSet<String> extractDependencyJarsToTempDir(String jarBaseFile) throws IOException {
+
+        File tempDir = new File(tmpdir + File.separator + "tempCompilerDir");
+
+        tempDirName = tempDir.getAbsolutePath();
+        TreeSet<String> classpath = new TreeSet<>();
+        if (!jarFileIsExtract) {
+            FileUtil.del(tempDir);
+            tempDir.mkdir();
+        } else {
+            if (tempDir.exists() || tempDir.isDirectory()) {
+                File[] files = tempDir.listFiles();
+                for (File file : files) {
+                    if (file.isFile()) {
+                        classpath.add(file.getAbsolutePath());
+                    }
+                }
+                if (CollUtil.isNotEmpty(classpath)) {
+                    classpath.add(jarBaseFile);
+                    return classpath;
+                }
+            }
+            FileUtil.del(tempDir);
+            tempDir.mkdir();
+        }
+
+
+        // 获取当前 jar 文件路径
+        File jarFile = new File(URLDecoder.decode(jarBaseFile, "UTF-8"));
+
+        try (JarFile jar = new JarFile(jarFile)) {
+            Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (entry.getName().startsWith("BOOT-INF/lib/") && entry.getName().endsWith(".jar")) {
+                    // 提取每个依赖 jar 到 tempDir
+                    File dest = new File(tempDir, entry.getName().replace("BOOT-INF/lib/", ""));
+                    try (InputStream is = jar.getInputStream(entry)) {
+                        Files.copy(is, dest.toPath());
+                    }
+                    classpath.add(dest.getAbsolutePath());
                 }
             }
         }
+        classpath.add(jarFile.getAbsolutePath());
+        jarFileIsExtract = true;
+        return classpath;
+    }
 
-        return cpBuilder.toString();
+    public static TreeSet<String> loadLocalClassPath() {
+        TreeSet<String> classpath = new TreeSet<>();
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        List<Object> jars = new ArrayList<>();
+        while (true) {
+            if (contextClassLoader == null) break;
+            Object ucp = ReflectUtil.getFieldValue(contextClassLoader, "ucp");
+            List<Object> loaders = (ArrayList) ReflectUtil.getFieldValue(ucp, "loaders");
+            if (CollUtil.isNotEmpty(loaders)) {
+                jars.addAll(loaders);
+            }
+            contextClassLoader = contextClassLoader.getParent();
+        }
+        List<String> baseUrls = jars.stream().map(loader -> {
+            String baseUrl = Convert.toStr(ReflectUtil.getFieldValue(loader, "base"));
+            if (StrUtil.startWith(baseUrl, "file:/")) {
+                return StrUtil.replace(baseUrl, "file:/", "");
+            }
+            if (StrUtil.startWith(baseUrl, "jar:file:/")) {
+                String replace = StrUtil.replace(baseUrl, "jar:file:/", "");
+                return StrUtil.replace(replace, ".jar!/", ".jar");
+            }
+            return baseUrl;
+        }).collect(Collectors.toList());
+        //jars.stream()
+        classpath.addAll(baseUrls);
+        return classpath;
     }
 }

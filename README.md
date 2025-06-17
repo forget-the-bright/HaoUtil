@@ -302,6 +302,50 @@ private HaoUtilProperties haoUtilProperties;
 // 获取线程池大小
 int poolSize = haoUtilProperties.getWsSchedulerPoolSize();
 ```
+### 13. **动态编译工具**
+
+- 支持动态编译 Java 代码，并执行结果。
+- 支持动态加载类，并执行结果。
+- 支持springboot jar 环境,解压jar中引用的库到 临时文件目录的 tempCompilerDir
+
+#### 注意事项：
+jdk版本大于8的时候,本地解析classpath 会用到反射获取jdk内部类，
+但是8之后的jdk做了处理，需要添加 vm配置 开启 ` --add-opens java.base/jdk.internal.loader=ALL-UNNAMED` 才能运行。
+
+#### 示例：
+```java
+    @Test
+    public void testHaoCompliler() throws Exception {
+        long start = System.currentTimeMillis();
+        String className = "com.example.demo.Greeter";
+        String javaCode = "package com.example.demo;\n" +
+                "\n" +
+                "import org.hao.core.print.PrintUtil;\n" +
+                "import org.hao.spring.SpringRunUtil;\n" +
+                "import org.hao.annotation.LogDefine;\n" +
+                "\n" +
+                "public class Greeter {\n" +
+                "    @LogDefine(\"123\")        " +
+                "    public void sayHello(String name) {\n" +
+                "        System.out.println(\"Hello, \" + name + \"!\");\n" +
+                "        PrintUtil.BLUE.Println(\"name = \" + name);\n" +
+                "        SpringRunUtil.printRunInfo();\n" +
+                "    }\n" +
+                "}";
+        String currentWorkingDirectory = System.getProperty("user.dir");
+        System.out.println("Current working directory: " + currentWorkingDirectory);
+        // 使用工具类编译并加载类
+        Class<?> clazz = CompilerUtil.compileAndLoadClass(className, javaCode);
+        long end = System.currentTimeMillis();
+        log.info("testHaoCompliler 编译耗时：{}ms", end - start);
+        Method sayHello = clazz.getMethod("sayHello", String.class);
+        LogDefine annotation = sayHello.getAnnotation(LogDefine.class);
+
+        // 创建类实例并调用方法
+        Object obj = clazz.getDeclaredConstructor().newInstance();
+        sayHello.invoke(obj, "World");
+    }
+```
 
 ---
 
@@ -355,7 +399,7 @@ int poolSize = haoUtilProperties.getWsSchedulerPoolSize();
 <dependency>
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.15.2</version>
+    <version>1.0.15.4</version>
 </dependency>
 ```
 

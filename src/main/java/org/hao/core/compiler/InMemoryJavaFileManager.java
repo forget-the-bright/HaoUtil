@@ -1,10 +1,7 @@
 package org.hao.core.compiler;
 
 import javax.tools.*;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.util.*;
 import java.util.jar.JarEntry;
@@ -22,6 +19,27 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileM
         return compiledClasses;
     }
 
+    @Override
+    public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse) throws IOException {
+        Iterable<JavaFileObject> list = super.list(location, packageName, kinds, recurse);
+        return list;
+    }
+
+    public static byte[] getClassBytes(Class<?> clazz) throws IOException {
+        String resourceName = clazz.getName().replace('.', '/') + ".class";
+        try (InputStream is = clazz.getClassLoader().getResourceAsStream(resourceName)) {
+            if (is == null) {
+                throw new FileNotFoundException("Resource not found: " + resourceName);
+            }
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] data = new byte[1024];
+            int nRead;
+            while ((nRead = is.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            return buffer.toByteArray();
+        }
+    }
 
     @Override
     public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) {
