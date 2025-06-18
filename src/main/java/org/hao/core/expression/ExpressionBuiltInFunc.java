@@ -1,4 +1,4 @@
-package org.hao.core;
+package org.hao.core.expression;
 
 import cn.hutool.core.util.ObjectUtil;
 

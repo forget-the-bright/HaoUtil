@@ -1,7 +1,7 @@
 package org.hao;
 
 import cn.hutool.core.util.StrUtil;
-import org.hao.core.ExpressionUtil;
+import org.hao.core.expression.ExpressionUtil;
 import org.hao.core.Maps;
 import org.hao.core.print.PrintUtil;
 import org.hao.spring.SpringRunUtil;

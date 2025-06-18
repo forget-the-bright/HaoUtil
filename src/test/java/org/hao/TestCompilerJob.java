@@ -56,13 +56,16 @@ public class TestCompilerJob {
                 "import org.hao.core.print.PrintUtil;\n" +
                 "import org.hao.spring.SpringRunUtil;\n" +
                 "import org.hao.annotation.LogDefine;\n" +
+                "import lombok.extern.slf4j.Slf4j;\n" +
                 "\n" +
+                "@Slf4j\n"+
                 "public class Greeter {\n" +
                 "    @LogDefine(\"123\")        " +
                 "    public void sayHello(String name) {\n" +
                 "        System.out.println(\"Hello, \" + name + \"!\");\n" +
                 "        PrintUtil.BLUE.Println(\"name = \" + name);\n" +
                 "        SpringRunUtil.printRunInfo();\n" +
+                "        log.info(\"name:{}\",name);\n" +
                 "    }\n" +
                 "}";
         String currentWorkingDirectory = System.getProperty("user.dir");

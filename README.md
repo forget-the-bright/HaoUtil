@@ -312,6 +312,10 @@ int poolSize = haoUtilProperties.getWsSchedulerPoolSize();
 jdk版本大于8的时候,本地解析classpath 会用到反射获取jdk内部类，
 但是8之后的jdk做了处理，需要添加 vm配置 开启 ` --add-opens java.base/jdk.internal.loader=ALL-UNNAMED` 才能运行。
 
+本地项目如果使用的注解处理器,编译时动态生成代码的,例如lombok, 
+如果jdk版本是8 需要jdk运行环境中或者环境变量中 classpath 添加 tools.jar, idea中开发在项目sdk中添加 tools.jar 也可以。
+版本大于jdk8 ,tools.jar 功能默认基础在jre 中,并且也jdk移除了 tools.jar, 无需过多配置
+
 #### 示例：
 ```java
     @Test

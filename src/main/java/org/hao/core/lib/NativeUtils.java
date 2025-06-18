@@ -1,4 +1,4 @@
-package org.hao.core;
+package org.hao.core.lib;
 
 import cn.hutool.core.io.FileUtil;
 import org.springframework.util.ResourceUtils;
