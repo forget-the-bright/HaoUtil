@@ -115,6 +115,13 @@ public class CompilerUtil {
         if (CollUtil.isNotEmpty(classpath)) {
             options.add("-cp");
             options.add(StrUtil.join(File.pathSeparator, classpath));
+            /*
+            * 补充了编译时启用 lombok或 其他注解生产库 的内容。java 8 需要系统库添加jdk环境的 tools.jar,在cp中或者jre的lib里面添加都可以
+            * 大于java 8 的环境jdk 默认移除了tools.jar 并且jre中默认集成此环境,无需过多配置就可以使用 注解类生产库 功能。
+            *
+            * -processorpath 指定注解处理器的类路径，用于处理注解类,但是实际测试中有无此配置并没有效果，是否启用注解生成还是看jdk版本和tools.jar.
+            * 这里保留了此配置, 但是基本可以忽略掉, 因为没有效果.
+            */
             List<String> lombokJar = classpath.stream().filter(q -> q.contains("lombok")).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(lombokJar)){
                 options.add("-processorpath");
