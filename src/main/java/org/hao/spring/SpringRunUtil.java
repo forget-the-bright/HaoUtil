@@ -44,19 +44,19 @@ public class SpringRunUtil {
         String path = SpringUtil.getProperty("server.servlet.context-path");
         String applicationName = SpringUtil.getApplicationName();
         path = path == null ? "" : path.equals("") ? "" : path;
-        String printStr =
-                "\n----------------------------------------------------------\n\t" +
-                        "Application " + applicationName + " is running! Access URLs:\n\t" +
-                        "Swagger-ui: \thttp://localhost:" + port + path + "/swagger-ui.html\n\t" +
-                        "Doc文档: \t\thttp://localhost:" + port + path + "/doc.html\n\t" +
-                        "Local: \t\t\thttp://localhost:" + port + path + "/\n\t";
+        String printStr ="\r\n"+
+                "----------------------------------------------------------\r\n" +
+                        "\tApplication " + applicationName + " is running! Access URLs:\r\n" +
+                        "\tSwagger:      \thttp://localhost:" + port + path + "/swagger-ui.html\r\n" +
+                        "\tKnif4j:       \thttp://localhost:" + port + path + "/doc.html\r\n" +
+                        "\tLocal:        \thttp://localhost:" + port + path + "/\r\n";
         int allIpSize = allIP.size();
         PrintUtil[] values = PrintUtil.values();
 
         for (int i = 0; i < allIpSize; i++) {
             String ipStr = allIP.get(i);
             int index = i + 1;
-            String format = StrUtil.format("External[{}]: \thttp://{}:{}{}\n{}", index, ipStr, port, path, index == allIpSize ? "" : "\t");
+            String format = StrUtil.format("\tExternal[{}]: \thttp://{}:{}{}\r\n", index, ipStr, port, path);
             printStr += RandomUtil.randomEle(values).getColorStr(format);
         }
         printStr += "----------------------------------------------------------";

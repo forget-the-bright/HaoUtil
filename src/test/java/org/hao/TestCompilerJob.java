@@ -71,7 +71,8 @@ public class TestCompilerJob {
         String currentWorkingDirectory = System.getProperty("user.dir");
         System.out.println("Current working directory: " + currentWorkingDirectory);
         // 使用工具类编译并加载类
-        Class<?> clazz = CompilerUtil.compileAndLoadClass(className, javaCode);
+        String classNameByCode = CompilerUtil.getClassNameByCode(javaCode);
+        Class<?> clazz = CompilerUtil.compileAndLoadClass(classNameByCode, javaCode);
         long end = System.currentTimeMillis();
         log.info("testHaoCompliler 编译耗时：{}ms", end - start);
         Method sayHello = clazz.getMethod("sayHello", String.class);

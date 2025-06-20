@@ -6,6 +6,9 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import org.hao.core.exception.HaoException;
 import org.hao.spring.SpringRunUtil;
 import org.springframework.boot.system.ApplicationHome;
@@ -69,30 +72,133 @@ public class CompilerUtil {
      */
     private static String tmpdir = System.getProperties().getProperty("java.io.tmpdir");
 
+
     /**
-     * 使用当前线程上下文类加载器编译并加载指定的 Java 源代码为 Class 对象。
+     * 编译并加载类
+     * 该方法根据提供的Java代码字符串，编译它，然后在当前类加载器的上下文中加载编译后的类
      *
-     * @param className 完整的类名（包括包名）
-     * @param javaCode  Java 源代码字符串
-     * @return 编译后的 Class 对象
-     * @throws ClassNotFoundException 如果类未找到
-     * @see #compileAndLoadClass(String, String, ClassLoader)
+     * @param javaCode 包含完整类定义的Java代码字符串
+     * @return 编译并加载后的Class对象
+     * @throws ClassNotFoundException 如果编译或加载过程中出现错误
      */
-    public static Class<?> compileAndLoadClass(String className, String javaCode) throws ClassNotFoundException {
-        return compileAndLoadClass(className, javaCode, Thread.currentThread().getContextClassLoader());
+    public static Class<?> compileAndLoadClass(String javaCode) throws ClassNotFoundException {
+        // 调用重载方法，传入通过代码获取的类名、Java代码和当前线程的上下文类加载器
+        return compileAndLoadClass(getClassNameByCode(javaCode), javaCode, Thread.currentThread().getContextClassLoader(), null);
+    }
+
+    /**
+     * 编译并加载类
+     * 该方法根据提供的Java代码字符串，编译它，并在当前线程的上下文类加载器中加载编译后的类
+     * 主要用于动态编译和加载类，以便在运行时扩展应用程序的功能
+     *
+     * @param javaCode 包含类定义的Java代码字符串
+     * @param writer   用于输出编译信息或错误的写入器
+     * @return 返回编译并加载的Class对象
+     * @throws ClassNotFoundException 如果编译或加载失败，则抛出此异常
+     */
+    public static Class<?> compileAndLoadClass(String javaCode, Writer writer) throws ClassNotFoundException {
+        // 调用重载方法，传入通过代码提取的类名、Java代码、当前线程上下文类加载器和输出写入器
+        return compileAndLoadClass(getClassNameByCode(javaCode), javaCode, Thread.currentThread().getContextClassLoader(), writer);
     }
 
 
     /**
-     * 编译并加载 Java 源代码为 Class 对象。
+     * 编译并加载类
+     * 该方法根据提供的Java代码字符串，编译该代码，然后使用指定的类加载器加载编译后的类
      *
-     * @param className         完整的类名（包括包名）
-     * @param javaCode          Java 源代码字符串
-     * @param parentClassLoader 父类加载器
-     * @return 编译后的 Class 对象
-     * @throws ClassNotFoundException 如果类未找到
+     * @param javaCode          包含Java类源代码的字符串
+     * @param parentClassLoader 父类加载器，用于加载编译后的类
+     * @return 编译并加载后的类对象
+     * @throws ClassNotFoundException 如果编译或加载过程中出现错误，则抛出此异常
+     */
+    public static Class<?> compileAndLoadClass(String javaCode, ClassLoader parentClassLoader) throws ClassNotFoundException {
+        // 调用重载方法，传入从代码中提取的类名、Java代码和父类加载器
+        return compileAndLoadClass(getClassNameByCode(javaCode), javaCode, parentClassLoader, null);
+    }
+
+    /**
+     * 编译并加载类
+     * 该方法根据提供的Java代码字符串，编译该代码，然后使用指定的类加载器加载编译后的类
+     * 主要解决了动态编译和加载类的需求，使得程序能够在运行时处理和加载未知的类
+     *
+     * @param javaCode          包含类定义的Java代码字符串
+     * @param parentClassLoader 父类加载器，用于加载编译后的类
+     * @param writer            输出编译信息的写入器，可用于捕获编译过程中的信息
+     * @return 编译并加载后的Class对象
+     * @throws ClassNotFoundException 如果编译后的类无法被找到
+     *                                <p>
+     *                                注意：该方法调用了另一个重载方法compileAndLoadClass，后者负责实际的编译和加载逻辑
+     */
+    public static Class<?> compileAndLoadClass(String javaCode, ClassLoader parentClassLoader, Writer writer) throws ClassNotFoundException {
+        // 调用重载方法，传入通过Java代码提取的类名
+        return compileAndLoadClass(getClassNameByCode(javaCode), javaCode, parentClassLoader, writer);
+    }
+
+
+    /**
+     * 编译并加载类
+     * <p>
+     * 该方法根据Java源代码字符串和类名，动态编译类并加载到Java虚拟机中
+     * 主要用于需要动态生成和执行类的场景，例如实现自定义代码片段的执行、动态代理等
+     *
+     * @param className 要编译的类的名称，用于在Java虚拟机中唯一标识该类
+     * @param javaCode  Java源代码字符串，包含类的定义
+     * @return 编译并加载后的Class对象
+     * @throws ClassNotFoundException 如果编译或加载过程中出现错误，则抛出此异常
+     */
+    public static Class<?> compileAndLoadClass(String className, String javaCode) throws ClassNotFoundException {
+        // 使用当前线程上下文类加载器来编译和加载类
+        // 这样做是为了保持类加载的一致性，避免类重复加载等问题
+        return compileAndLoadClass(className, javaCode, Thread.currentThread().getContextClassLoader(), null);
+    }
+
+    /**
+     * 编译并加载类
+     * <p>
+     * 此方法根据提供的Java源代码字符串编译一个类，并使用当前线程上下文类加载器加载该类
+     * 它主要用于动态生成和编译类的场景，使得可以在运行时扩展和定制行为
+     *
+     * @param className 要编译的类的名称
+     * @param javaCode  包含类定义的Java源代码字符串
+     * @param writer    用于输出编译信息的写入器
+     * @return 编译后的Class对象
+     * @throws ClassNotFoundException 如果类编译失败或加载失败
+     */
+    public static Class<?> compileAndLoadClass(String className, String javaCode, Writer writer) throws ClassNotFoundException {
+        // 调用重载方法，使用当前线程的上下文类加载器和提供的Writer
+        return compileAndLoadClass(className, javaCode, Thread.currentThread().getContextClassLoader(), writer);
+    }
+
+
+    /**
+     * 编译并加载类
+     * 该方法根据Java源代码字符串和类名编译类，并使用指定的父类加载器加载编译后的类
+     * 主要用于动态生成和编译Java类，然后在当前Java环境中加载使用
+     *
+     * @param className         要编译和加载的类名
+     * @param javaCode          Java源代码字符串
+     * @param parentClassLoader 父类加载器，用于加载编译后的类
+     * @return 编译并加载的类
+     * @throws ClassNotFoundException 如果编译或加载类时出现错误
      */
     public static Class<?> compileAndLoadClass(String className, String javaCode, ClassLoader parentClassLoader) throws ClassNotFoundException {
+        // 调用重载方法，传入null作为最后一个参数，用于处理不需要特定处理的情况
+        return compileAndLoadClass(className, javaCode, parentClassLoader, null);
+    }
+
+    /**
+     * 编译并加载Java类
+     * 此方法接受类名、Java源码字符串、父类加载器和输出写入器作为参数，
+     * 将给定的Java源码编译成字节码，并使用自定义类加载器加载到JVM中
+     *
+     * @param className         要编译的Java类的名称
+     * @param javaCode          Java源码字符串
+     * @param parentClassLoader 父类加载器，用于创建新的类加载器
+     * @param writer            用于输出编译信息的写入器
+     * @return 编译并加载的Java类
+     * @throws ClassNotFoundException 如果类编译失败或加载失败
+     */
+    public static Class<?> compileAndLoadClass(String className, String javaCode, ClassLoader parentClassLoader, Writer writer) throws ClassNotFoundException {
         // 获取系统自带的 Java 编译器
         if (SYSTEM_COMPILER == null) {
             throw new RuntimeException("无法获取 Java 编译器，请确保使用的是 JDK 而不是 JRE");
@@ -116,21 +222,22 @@ public class CompilerUtil {
             options.add("-cp");
             options.add(StrUtil.join(File.pathSeparator, classpath));
             /*
-            * 补充了编译时启用 lombok或 其他注解生产库 的内容。java 8 需要系统库添加jdk环境的 tools.jar,在cp中或者jre的lib里面添加都可以
-            * 大于java 8 的环境jdk 默认移除了tools.jar 并且jre中默认集成此环境,无需过多配置就可以使用 注解类生产库 功能。
-            *
-            * -processorpath 指定注解处理器的类路径，用于处理注解类,但是实际测试中有无此配置并没有效果，是否启用注解生成还是看jdk版本和tools.jar.
-            * 这里保留了此配置, 但是基本可以忽略掉, 因为没有效果.
-            */
+             * 补充了编译时启用 lombok或 其他注解生成库 的内容。java 8 需要系统库添加jdk环境的 tools.jar,在cp中或者jre的lib里面添加都可以
+             * 大于java 8 的环境jdk 默认移除了tools.jar 并且jre中默认集成此环境,无需过多配置就可以使用 注解类生成库 功能。
+             *
+             * -processorpath 指定注解处理器的类路径，用于处理注解类,但是实际测试中有无此配置并没有效果，是否启用注解生成还是看jdk版本和tools.jar.
+             * 这里保留了此配置, 但是基本可以忽略掉, 因为没有效果.
+             */
             List<String> lombokJar = classpath.stream().filter(q -> q.contains("lombok")).collect(Collectors.toList());
-            if (CollUtil.isNotEmpty(lombokJar)){
+            if (CollUtil.isNotEmpty(lombokJar)) {
                 options.add("-processorpath");
                 options.add(StrUtil.join(File.pathSeparator, lombokJar));
             }
         }
         // 获取一个编译任务实例
         // 此处省略了SYSTEM_COMPILER和fileManager的初始化过程
-        JavaCompiler.CompilationTask task = SYSTEM_COMPILER.getTask((Writer) null, // 不使用Writer对象
+        JavaCompiler.CompilationTask task = SYSTEM_COMPILER.getTask(
+                writer, // Writer对象, 用于输出编译信息
                 fileManager, // 文件管理器，负责管理编译过程中的文件
                 diagnosticCollector, // 诊断收集器，收集编译信息
                 options, // 编译选项
@@ -320,7 +427,6 @@ public class CompilerUtil {
      * 从中提取所有可用的本地 JAR 或目录路径，并转换为标准文件系统格式。
      * </p>
      *
-     *
      * 处理步骤如下：
      * <ol>
      *     <li>遍历当前线程上下文类加载器链</li>
@@ -328,13 +434,12 @@ public class CompilerUtil {
      *     <li>从中提取 loaders 列表（即每个类路径条目）</li>
      *     <li>将这些路径标准化为文件系统格式并加入 classpath 集合</li>
      * </ol>
-     *
+     * <p>
      * 支持的 URL 类型包括：
      * <ul>
      *     <li>{@code file:/}：表示本地文件系统路径</li>
      *     <li>{@code jar:file:/}：表示嵌套在 JAR 包内的资源路径</li>
      * </ul>
-     *
      *
      * @return 包含本地类路径的有序集合（TreeSet），保证路径唯一且按字母顺序排列
      */
@@ -392,5 +497,35 @@ public class CompilerUtil {
         // 返回最终构建的类路径集合
         return classpath;
 
+    }
+
+    /**
+     * 从给定的 Java 源码字符串中解析并获取完整的类名（含包名）。
+     *
+     * <p>若源码中未定义包名，则仅返回类名；否则返回包名加类名的完整形式。</p>
+     *
+     * @param code Java 源码字符串，必须包含至少一个类定义
+     * @return 完整的类名（例如："com.example.MyClass"），如果无类定义则返回 null
+     * @throws IllegalArgumentException 如果源码为空或无法解析为合法 Java 类
+     */
+    public static String getClassNameByCode(String code) {
+        try {
+            CompilationUnit parse = StaticJavaParser.parse(code);
+
+            // 获取包名，默认为 "empty"
+            String packageName = parse.getPackageDeclaration()
+                    .map(pkg -> pkg.getName().asString())
+                    .orElse("empty");
+
+            // 获取第一个类定义的名称
+            TypeDeclaration<?> type = parse.findAll(TypeDeclaration.class).stream().findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("源码中未找到类定义"));
+
+            String className = type.getNameAsString();
+
+            return "empty".equals(packageName) ? className : packageName + "." + className;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("解析类名失败: " + e.getMessage(), e);
+        }
     }
 }

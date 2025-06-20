@@ -82,11 +82,11 @@ public enum PrintUtil {
      *                %s是字符串占位符，%d 是数字占位符
      */
     private void printSingleColor(int code, int n, String content) {
-        System.out.format("\33[%d;%dm%s\n", code, n, content + "\33[0;39m");
+        System.out.format("\33[%d;%dm%s\r\n", code, n, content + "\33[0;39m");
     }
 
     private void printSingleColor(int code, int backCode, int n, String content) {
-        System.out.format("\33[%d;%d;%dm%s\n", code, backCode, n, content + "\33[0;39m");
+        System.out.format("\33[%d;%d;%dm%s\r\n", code, backCode, n, content + "\33[0;39m");
     }
 
     private String getColorString(int code, int n, String content) {
