@@ -403,7 +403,7 @@ jdk版本大于8的时候,本地解析classpath 会用到反射获取jdk内部�
 <dependency>
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.15.4</version>
+    <version>1.0.15.6</version>
 </dependency>
 ```
 
