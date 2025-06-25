@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.javaparser.StaticJavaParser;
@@ -280,6 +281,95 @@ public class CompilerUtil {
         return aClass;
     }
 
+    public static InMemoryClassLoader compileAndLoadClass(String... javaCode) throws ClassNotFoundException {
+        return compileAndLoadClass(null, null, javaCode);
+    }
+
+    public static InMemoryClassLoader compileAndLoadClass(ClassLoader parentClassLoader, String... javaCodes) throws ClassNotFoundException {
+        return compileAndLoadClass(parentClassLoader, null, javaCodes);
+    }
+
+    public static InMemoryClassLoader compileAndLoadClass(ClassLoader parentClassLoader, Writer writer, String... javaCodes) throws ClassNotFoundException {
+        if (ArrayUtil.isEmpty(javaCodes)) {
+            throw new HaoException("javaCode 不能为空");
+        }
+        // 获取系统自带的 Java 编译器
+        if (SYSTEM_COMPILER == null) {
+            throw new RuntimeException("无法获取 Java 编译器，请确保使用的是 JDK 而不是 JRE");
+        }
+
+        // 构建内存文件管理器：使用 InMemoryJavaFileManager 管理源码与字节码的内存存储
+        InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(SYSTEM_COMPILER.getStandardFileManager(null, null, null));
+        List<JavaFileObject> compilationUnits = new ArrayList<>();
+        for (String javaCode : javaCodes) {
+            String className = getClassNameByCode(javaCode);
+            compilationUnits.add(new JavaSourceFromString(className, javaCode));
+        }
+        // 执行编译任务
+        // 构造编译任务：将输入的 Java 源码字符串封装为 JavaFileObject 并设置编译参数
+        // 创建一个诊断收集器，用于收集编译过程中的信息
+        DiagnosticCollector<? super JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
+        // 创建一个选项列表，用于配置编译任务的参数
+        List<String> options = new ArrayList<>();
+        if (classpath.isEmpty()) {
+            classpath.clear();
+            classpath.addAll(loadClassPath());
+        }
+        if (CollUtil.isNotEmpty(classpath)) {
+            options.add("-cp");
+            options.add(StrUtil.join(File.pathSeparator, classpath));
+            /*
+             * 补充了编译时启用 lombok或 其他注解生成库 的内容。java 8 需要系统库添加jdk环境的 tools.jar,在cp中或者jre的lib里面添加都可以
+             * 大于java 8 的环境jdk 默认移除了tools.jar 并且jre中默认集成此环境,无需过多配置就可以使用 注解类生成库 功能。
+             *
+             * -processorpath 指定注解处理器的类路径，用于处理注解类,但是实际测试中有无此配置并没有效果，是否启用注解生成还是看jdk版本和tools.jar.
+             * 这里保留了此配置, 但是基本可以忽略掉, 因为没有效果.
+             */
+            List<String> lombokJar = classpath.stream().filter(q -> q.contains("lombok")).collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(lombokJar)) {
+                options.add("-processorpath");
+                options.add(StrUtil.join(File.pathSeparator, lombokJar));
+            }
+        }
+        // 获取一个编译任务实例
+        // 此处省略了SYSTEM_COMPILER和fileManager的初始化过程
+        JavaCompiler.CompilationTask task = SYSTEM_COMPILER.getTask(
+                writer, // Writer对象, 用于输出编译信息
+                fileManager, // 文件管理器，负责管理编译过程中的文件
+                diagnosticCollector, // 诊断收集器，收集编译信息
+                options, // 编译选项
+                (Iterable) null, // 不使用类路径入口
+                compilationUnits); // 编译单元集合，包含需要编译的Java源文件
+        // 尝试执行编译任务
+        try {
+            // 如果编译失败
+            if (!task.call()) {
+                // 抛出异常，包含编译失败的详细信息
+                // todo 这里可以做一些处理,比如编译失败，如果是jar环境，可以清理掉temp-classpath 重新解压加载，
+                //  但是问题是，如果代码就是引用了找不到的库，这里重复加载，就会消耗系统性能， 磁盘io
+                throw new HaoException("编译失败: " + getDiagnosticMessages(diagnosticCollector));
+            }
+        } finally {
+            // 确保文件管理器被正确关闭，释放资源
+            IoUtil.close(fileManager);
+        }
+        // 创建类加载器并加载编译后的类
+        // 如果未指定父类加载器，则使用当前线程的上下文类加载器
+        if (parentClassLoader == null) {
+            parentClassLoader = Thread.currentThread().getContextClassLoader();
+        }
+
+        // 创建自定义的类加载器实例，用于加载内存中的字节码
+        InMemoryClassLoader classLoader = new InMemoryClassLoader(parentClassLoader);
+
+        // 遍历已编译的类集合，将每个类的字节码添加到类加载器中
+        for (Map.Entry<String, InMemoryJavaFileManager.ByteCodeJavaFileObject> entry : fileManager.getCompiledClasses().entrySet()) {
+            classLoader.addClassBytes(entry.getKey(), entry.getValue().getByteCode());
+        }
+        classCache.putAll(classLoader.getClasses());
+        // 返回加载的类
+        return classLoader;
+    }
 
     /**
      * 根据指定的类名从缓存中获取对应的 Class 对象，并通过反射创建其实例。
@@ -426,7 +516,7 @@ public class CompilerUtil {
      * 该段逻辑通过反射访问类加载器内部结构，获取底层的 URLClassLoader 中的 "ucp" 和 "loaders" 字段，
      * 从中提取所有可用的本地 JAR 或目录路径，并转换为标准文件系统格式。
      * </p>
-     *
+     * <p>
      * 处理步骤如下：
      * <ol>
      *     <li>遍历当前线程上下文类加载器链</li>
