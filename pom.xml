@@ -257,6 +257,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- 这里写不写版本都行,但是idea这里的mvn管理配置不是很完善有点sb,总是回给个错误提示,但是刷新就好了,这里加上版本就是避免错误提示 -->
+<!--                <version>${spring.boot.version}</version>-->
+
                 <configuration>
                     <classifier>exec</classifier>
                     <!-- 不设置skip为false:打包的时候生成的jar包结构如下：BOOT-INF下包括了项目结构包和lib(依赖的代码jar包)，
