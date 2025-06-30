@@ -6,7 +6,7 @@
 
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.15.7</version>
+    <version>1.0.15.8</version>
     <!--20250530 mvn中央仓库要求包括项目名称属性。不然无法发布-->
     <name>HaoUtil</name>
 
@@ -22,7 +22,7 @@
         <poi.version>4.1.2</poi.version>
         <junit.version>5.9.2</junit.version>
         <mvel.version>2.5.2.Final</mvel.version>
-        <javaparser-core.version> 3.27.0</javaparser-core.version>
+        <javaparser-core.version>3.27.0</javaparser-core.version>
     </properties>
     <description>简单的复用项目中常用的工具</description>
     <url>https://github.com/forget-the-bright/HaoUtil</url>
@@ -58,7 +58,7 @@
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-annotations</artifactId>
                 <version>${swagger.core.version}</version>
-<!--                <type>pom</type> &lt;!&ndash; 指明这是一个 POM 文件 &ndash;&gt;-->
+                <!--                <type>pom</type> &lt;!&ndash; 指明这是一个 POM 文件 &ndash;&gt;-->
                 <optional>true</optional>
                 <scope>provided</scope> <!-- 指定导入作用域 -->
             </dependency>
@@ -197,7 +197,6 @@
         </dependency>
 
     </dependencies>
-
 
 
     <developers>

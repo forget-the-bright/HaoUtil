@@ -103,7 +103,6 @@ public abstract class BaseIntervalWs {
      *     <li><strong>"内容"</strong>: 包含每个类的详细状态信息，包括概览和详情。</li>
      * </ul>
      *
-     *
      * @return 返回一个包含 GEWS 状态信息的 {@link LinkedHashMap} 实例
      */
     public static LinkedHashMap<String, Object> getIntervalWSStatus() {
@@ -358,7 +357,7 @@ public abstract class BaseIntervalWs {
             if (CollUtil.isEmpty(geCurrentVauleWS)) {
                 scheduledFutureTuple.setSecond(null);
                 scheduledFuture.cancel(true);
-                return ;
+                return;
             }
             String message = "";
             try {
@@ -376,10 +375,11 @@ public abstract class BaseIntervalWs {
                     WSUtil.sendMessage(session, message);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    WSUtil.sendMessage(session, e.getMessage());
+                    //如果发送失败，代表可能上一次还没有传输完成等情况。 在此发送也不会成功，不考虑再次发送
+                    //WSUtil.sendMessage(session, e.getMessage());
                 }
             }
-            if (CollUtil.isNotEmpty(badWS)){
+            if (CollUtil.isNotEmpty(badWS)) {
                 geCurrentVauleWS.removeAll(badWS);
             }
         };
