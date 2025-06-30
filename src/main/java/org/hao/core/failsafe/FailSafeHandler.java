@@ -12,8 +12,8 @@ import java.time.Duration;
  * 并通过回调方法监控任务的执行状态（如成功、失败、重试、完成）。
  *
  * @param <T> 表示执行过程中涉及的结果或数据类型的泛型参数
- * @author Hao
- * @date 2024-10-15
+ * @author wanghao
+ * @date 2025-07-01
  */
 public interface FailSafeHandler<T> {
 

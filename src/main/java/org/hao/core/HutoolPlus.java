@@ -12,6 +12,8 @@ import cn.hutool.poi.excel.ExcelWriter;
 import cn.hutool.poi.excel.style.StyleUtil;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.*;
+import org.hao.annotation.FailSafeRule;
+import org.hao.core.failsafe.FailSafeHandler;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -47,6 +49,7 @@ public class HutoolPlus {
      * @param response HTTP响应对象，用于设置响应头和内容类型
      */
     @SneakyThrows
+    @FailSafeRule(handler = FailSafeHandler.class)
     public static void setFileName(String fileName, HttpServletResponse response) {
         // 设置Content-Disposition响应头，用于指定文件名，文件名使用UTF-8编码以支持中文
         response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
