@@ -13,12 +13,23 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2025-07-01
  */
 @Slf4j
-public class DefaultFailSafeHandler<Object> implements FailSafeHandler<Object> {
+public class DemoFailSafeHandler<Object> implements FailSafeHandler<Object> {
+    /**
+     * 初始化安全策略
+     *
+     * @return 安全策略对象
+     */
     @Override
     public Policy<Object> initFailSafe() {
         return FailSafeHandler.super.initFailSafe();
     }
 
+    /**
+     * 创建执行器
+     *
+     * @param build 安全策略对象 {@link #initFailSafe()} 返回的策略对象
+     * @return 执行器对象, 这里可以修改执行器配置, 最后拿执行器来执行任务
+     */
     @Override
     public FailsafeExecutor<Object> beforeRun(Policy<Object> build) {
         return FailSafeHandler.super.beforeRun(build);
@@ -32,7 +43,7 @@ public class DefaultFailSafeHandler<Object> implements FailSafeHandler<Object> {
      */
     @Override
     public void onComplete(ExecutionCompletedEvent<Object> objectExecutionCompletedEvent) {
-        log.debug("Operation completed with result: {}", objectExecutionCompletedEvent.getResult());
+        log.info("策略处理器流程,操作已完成并返回结果: {}", objectExecutionCompletedEvent.getResult());
     }
 
     /**
@@ -43,7 +54,7 @@ public class DefaultFailSafeHandler<Object> implements FailSafeHandler<Object> {
      */
     @Override
     public void onRetry(ExecutionAttemptedEvent<Object> objectExecutionAttemptedEvent) {
-        log.debug("Retrying after failure, attempt {} ,Last exception: {}",
+        log.info("失败后重试, 尝试第 {} 次 ,最后的异常 : {}",
                 objectExecutionAttemptedEvent.getAttemptCount(), objectExecutionAttemptedEvent.getLastException().getMessage());
     }
 
@@ -55,7 +66,7 @@ public class DefaultFailSafeHandler<Object> implements FailSafeHandler<Object> {
      */
     @Override
     public void onFailure(ExecutionCompletedEvent<Object> objectExecutionCompletedEvent) {
-        log.debug("Operation failed after {} attempts", objectExecutionCompletedEvent.getAttemptCount());
+        log.info("尝试 {} 次后操作失败", objectExecutionCompletedEvent.getAttemptCount());
     }
 
     /**
@@ -66,6 +77,6 @@ public class DefaultFailSafeHandler<Object> implements FailSafeHandler<Object> {
      */
     @Override
     public void onSuccess(ExecutionCompletedEvent<Object> objectExecutionCompletedEvent) {
-        log.debug("Operation succeeded on attempt {}", objectExecutionCompletedEvent.getAttemptCount());
+        log.info("尝试 {} 次后操作成功", objectExecutionCompletedEvent.getAttemptCount());
     }
 }

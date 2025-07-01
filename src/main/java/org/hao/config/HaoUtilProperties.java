@@ -16,6 +16,7 @@ public class HaoUtilProperties {
     private boolean enabled;
     private boolean printInterface;
     private boolean enableWs = false;
+    private boolean enableFailsafe = false;
     //通常建议根据你的服务器核心数设置
     private int wsSchedulerPoolSize = Runtime.getRuntime().availableProcessors() * 2;
 
@@ -49,5 +50,13 @@ public class HaoUtilProperties {
 
     public void setEnableWs(boolean enableWs) {
         this.enableWs = enableWs;
+    }
+
+    public boolean isEnableFailsafe() {
+        return enableFailsafe;
+    }
+
+    public void setEnableFailsafe(boolean enableFailsafe) {
+        this.enableFailsafe = enableFailsafe;
     }
 }

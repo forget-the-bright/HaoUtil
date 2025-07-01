@@ -1,10 +1,7 @@
 package org.hao.config;
 
 import cn.hutool.extra.spring.SpringUtil;
-import org.hao.aspect.ApiOperationAspect;
-import org.hao.aspect.LogAspect;
-import org.hao.aspect.LogDefineConfig;
-import org.hao.aspect.PrintAspect;
+import org.hao.aspect.*;
 import org.hao.core.ws.WSUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -61,5 +58,13 @@ public class HaoUtilAutoConfig {
     @ConditionalOnProperty(prefix = "hao-util", value = "enable-ws", havingValue = "true")
     public WSUtil wsUtil() {
         return new WSUtil(haoUtilProperties);
+    }
+
+
+    @Bean // @Bean：该注解用于将方法的返回值以 Bean 对象的形式添加到容器中
+    // @ConditionalOnMissingBean(xxx.class)：该注解表示当容器中没有 xxx 类时，该方法才生效
+    @ConditionalOnProperty(prefix = "hao-util", value = "enable-failsafe", havingValue = "true")
+    public FailSafeAspect failSafeAspect() {
+        return new FailSafeAspect();
     }
 }

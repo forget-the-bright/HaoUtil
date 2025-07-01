@@ -22,12 +22,12 @@ public interface FailSafeHandler<T> {
      * 初始化安全策略,默认构建器是 RetryPolicyBuilder
      * 这里返回类型只要是 Policy 就可以了,可以替换对应的实现类。
      * https://failsafe.dev/policies/ 策略概览
-     * 重试策略构建器 RetryPolicyBuilder.class https://failsafe.dev/retry/
-     * 熔断策略构建器 CircuitBreakerBuilder.class https://failsafe.dev/circuit-breaker/
-     * 限流策略构建器 RateLimiterBuilder.class https://failsafe.dev/rate-limiter/
-     * 超时策略构建器 TimeoutBuilder.class https://failsafe.dev/timeout/
-     * 隔离并发策略构建器 BulkheadBuilder.class https://failsafe.dev/bulkhead/
-     * 降级策略构建器 FallbackBuilder.class https://failsafe.dev/fallback/
+     * 重试策略构建器 {@link RetryPolicyBuilder} https://failsafe.dev/retry/
+     * 熔断策略构建器 {@link CircuitBreakerBuilder} https://failsafe.dev/circuit-breaker/
+     * 限流策略构建器 {@link RateLimiterBuilder} https://failsafe.dev/rate-limiter/
+     * 超时策略构建器 {@link TimeoutBuilder} https://failsafe.dev/timeout/
+     * 隔离并发策略构建器 {@link BulkheadBuilder} https://failsafe.dev/bulkhead/
+     * 降级策略构建器 {@link FallbackBuilder} https://failsafe.dev/fallback/
      *
      * @return 策略对象
      */
@@ -49,9 +49,9 @@ public interface FailSafeHandler<T> {
 
     /**
      * 执行前配置
-     * 超时配置在这里做,参考文档：https://failsafe.dev/timeout/
+     * 超时配置可以在这里做,参考文档：https://failsafe.dev/timeout/
      *
-     * @param build safe策略
+     * @param build safe策略 {@link #initFailSafe()} 返回的策略对象
      * @return 执行器对象
      */
     default FailsafeExecutor<T> beforeRun(Policy<T> build) {

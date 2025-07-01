@@ -2,11 +2,13 @@ package org.hao.aspect;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.hao.annotation.FailSafeRule;
 import org.hao.core.failsafe.FailSafeHandler;
 import org.hao.core.failsafe.FailSafeHandlerExecuteor;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
@@ -18,6 +20,8 @@ import java.lang.reflect.Method;
  * @author wanghao
  * @since 2025-07-01
  */
+@Aspect
+@Component
 public class FailSafeAspect {
 
     /**
