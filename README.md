@@ -350,6 +350,131 @@ jdk版本大于8的时候,本地解析classpath 会用到反射获取jdk内部�
         sayHello.invoke(obj, "World");
     }
 ```
+以下是关于 **FailSafe 功能** 的使用说明，可将其补充到 [README.md](file://D:\Project\private\Java\HaoUtil\README.md) 中的 **“失败保障工具”** 模块。
+
+---
+
+### 14. **失败保障工具 - FailSafe**
+
+#### 功能描述：
+
+基于 [Failsafe](https://failsafe.dev/) 提供灵活的失败处理机制（如重试、熔断、超时等），支持自定义策略和执行回调。适用于网络请求、数据库操作、第三方接口调用等易失败场景。
+
+通过封装 [FailSafeHandler](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\failsafe\FailSafeHandler.java#L17-L100) 接口和 `FailSafeHandlerExecutor`，可以快速构建具有失败恢复能力的任务，并监控任务执行状态（成功、失败、重试、完成）。
+
+#### 示例代码：
+
+##### 自定义 FailSafeHandler 实现类
+
+```java
+@Slf4j
+public class DemoFailSafeHandler<Object> implements FailSafeHandler<Object> {
+
+    @Override
+    public Policy<Object> initFailSafe() {
+        return RetryPolicy.<Object>builder()
+                .handle(Exception.class)
+                .withMaxRetries(3)
+                .withDelay(Duration.ofSeconds(1))
+                .onRetry(event -> log.info("重试中... 尝试第 {} 次", event.getAttemptCount()))
+                .onSuccess(event -> log.info("操作成功，尝试次数：{}", event.getAttemptCount()))
+                .onFailure(event -> log.error("操作失败，尝试次数：{}", event.getAttemptCount()))
+                .build();
+    }
+
+    @Override
+    public void onComplete(ExecutionCompletedEvent<Object> event) {
+        log.info("操作已完成，结果为: {}", event.getResult());
+    }
+}
+```
+
+##### 使用 FailSafeHandler 执行任务
+
+```java
+@Test
+public void testFailsafeHandler() throws Exception {
+    FailSafeHandler<Integer> handler = new DemoFailSafeHandler<>();
+    Integer result = FailSafeHandlerExecuteor.execute(handler, () -> {
+        int i = RandomUtil.randomInt(0, 3);
+        if (i != 2) throw new Exception("模拟失败");
+        return i;
+    });
+    System.out.println("最终结果：" + result);
+}
+```
+
+#### 特性支持：
+
+- ✅ **重试策略**：配置最大重试次数、延迟时间、指数退避等。
+- ✅ **熔断机制**：自动切断故障链路，防止雪崩效应（需自行实现熔断逻辑）。
+- ✅ **超时控制**：设置任务最大执行时间。
+- ✅ **降级处理**：失败后返回默认值或备用方案（可扩展实现）。
+- ✅ **事件监听**：提供 onRetry / onSuccess / onFailure / onComplete 回调方法。
+
+---
+
+#### 注解方式集成 AOP 切面（可选）
+
+你可以结合 [@FailSafeRule](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\annotation\FailSafeRule.java#L11-L15) 注解与切面 [FailSafeAspect](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\aspect\FailSafeAspect.java#L22-L81) 实现方法级别的 FailSafe 管理。
+
+
+##### 在方法上使用注解
+
+```java
+@FailSafeRule(handler = DemoFailSafeHandler.class)
+public String retryableMethod() {
+    // 可能会抛异常的方法
+    return "success";
+}
+```
+
+
+---
+
+#### 配置启用 FailSafe 支持
+
+在 `application.yml` 中开启 FailSafe 相关功能：
+
+```yaml
+hao-util:
+  enable-failsafe: true # 启用 FailSafe 支持
+```
+
+
+---
+
+#### 适用场景
+
+| 场景                 | 说明 |
+|----------------------|------|
+| 网络请求失败重试       | HTTP 调用、RPC 调用等 |
+| 数据库连接/操作容错     | 连接中断、事务失败等情况 |
+| 第三方 API 接口调用    | 外部服务不稳定时进行重试 |
+| 关键业务流程保障       | 如支付、订单提交等 |
+
+---
+
+#### 依赖引入
+
+确保项目中已引入 Failsafe 依赖（HaoUtil 已内置）：
+
+```xml
+<dependency>
+    <groupId>dev.failsafe</groupId>
+    <artifactId>failsafe</artifactId>
+</dependency>
+```
+
+
+---
+
+#### 补充建议
+
+- 可根据实际需求继承 [FailSafeHandler](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\failsafe\FailSafeHandler.java#L17-L100) 并覆盖 [initFailSafe()](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\failsafe\FailSafeHandler.java#L33-L47) 方法来自定义策略。
+- 对于高并发场景，建议配合线程池使用，避免阻塞主线程。
+- 日志输出建议详细记录每次重试信息，便于排查问题。
+
 
 ---
 
@@ -403,7 +528,7 @@ jdk版本大于8的时候,本地解析classpath 会用到反射获取jdk内部�
 <dependency>
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.15.6</version>
+    <version>1.0.15.9</version>
 </dependency>
 ```
 
