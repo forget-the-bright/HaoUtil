@@ -1,5 +1,6 @@
 package org.hao.spring;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
@@ -40,23 +41,23 @@ public class SpringRunUtil {
 
     public static void printRunInfo() {
         List<String> allIP = IPUtils.allIP;
-        String port = SpringUtil.getProperty("server.port");
-        String path = SpringUtil.getProperty("server.servlet.context-path");
         String applicationName = SpringUtil.getApplicationName();
-        path = path == null ? "" : path.equals("") ? "" : path;
-        String printStr ="\r\n"+
+        String port = ObjectUtil.defaultIfEmpty(SpringUtil.getProperty("server.port"), "80");
+        port = "80".equals(port) ? "" : ":" + port;
+        String path = ObjectUtil.defaultIfEmpty(SpringUtil.getProperty("server.servlet.context-path"), "");
+        String printStr = "\r\n" +
                 "----------------------------------------------------------\r\n" +
-                        "\tApplication " + applicationName + " is running! Access URLs:\r\n" +
-                        "\tSwagger:      \thttp://localhost:" + port + path + "/swagger-ui.html\r\n" +
-                        "\tKnif4j:       \thttp://localhost:" + port + path + "/doc.html\r\n" +
-                        "\tLocal:        \thttp://localhost:" + port + path + "/\r\n";
+                "\tApplication " + applicationName + " is running! Access URLs:\r\n" +
+                "\tSwagger:      \thttp://localhost" + port + path + "/swagger-ui.html\r\n" +
+                "\tKnif4j:       \thttp://localhost" + port + path + "/doc.html\r\n" +
+                "\tLocal:        \thttp://localhost" + port + path + "/\r\n";
         int allIpSize = allIP.size();
         PrintUtil[] values = PrintUtil.values();
 
         for (int i = 0; i < allIpSize; i++) {
             String ipStr = allIP.get(i);
             int index = i + 1;
-            String format = StrUtil.format("\tExternal[{}]: \thttp://{}:{}{}\r\n", index, ipStr, port, path);
+            String format = StrUtil.format("\tExternal[{}]: \thttp://{}{}{}\r\n", index, ipStr, port, path);
             printStr += RandomUtil.randomEle(values).getColorStr(format);
         }
         printStr += "----------------------------------------------------------";
