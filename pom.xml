@@ -24,6 +24,7 @@
         <mvel.version>2.5.2.Final</mvel.version>
         <javaparser-core.version>3.27.0</javaparser-core.version>
         <failsafe.version>3.3.2</failsafe.version>
+        <mybatis-plus.version>3.5.8</mybatis-plus.version>
     </properties>
     <description>简单的复用项目中常用的工具</description>
     <url>https://github.com/forget-the-bright/HaoUtil</url>
@@ -108,6 +109,15 @@
                 <optional>true</optional>
                 <scope>provided</scope>
                 <version>${failsafe.version}</version> <!-- 根据需要选择最新版本 -->
+            </dependency>
+
+            <!-- mybatis-plus -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <optional>true</optional>
+                <scope>provided</scope>
+                <version>${mybatis-plus.version}</version>
             </dependency>
 
             <!-- JUnit 5 -->
@@ -199,6 +209,11 @@
         <dependency>
             <groupId>dev.failsafe</groupId>
             <artifactId>failsafe</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
         <!-- JUnit 5 -->
         <dependency>
