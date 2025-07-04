@@ -475,6 +475,85 @@ hao-util:
 - 对于高并发场景，建议配合线程池使用，避免阻塞主线程。
 - 日志输出建议详细记录每次重试信息，便于排查问题。
 
+### 15.MPSqlUtil
+`MPSqlUtil` 是 `HaoUtil` 工具库中的一个核心数据库操作工具类，基于 MyBatis-Plus 提供了丰富的数据库操作封装，主要功能包括：
+
+---
+
+#### 1. **字段相关操作**
+- **获取 SQL 字段名**  
+  `getSqlFieldName(SFunction<T, ?> fieldFunction)`  
+  将 Lambda 表达式转换为对应的数据库字段名（驼峰命名转下划线）。
+
+- **获取主键字段信息**  
+  [getId(Class<T> entityClass)](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\db\MPSqlUtil.java#L46-L54)  
+  获取实体类对应的主键字段对象（`Field` 类型），用于后续反射操作。
+
+- **获取 SQL 主键字段名**  
+  [getSqlId(Class<T> entityClass)](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\db\MPSqlUtil.java#L56-L64)  
+  获取实体类对应的数据库主键字段名（下划线格式）。
+
+---
+
+#### 2. **事务管理**
+- **手动事务执行**  
+  [manualTransactions(Runnable runnable)](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\db\MPSqlUtil.java#L73-L93)  
+  使用 Spring 的 `TransactionTemplate` 手动控制事务，支持在事务中执行任意逻辑，异常时自动回滚。
+
+---
+
+#### 3. **通用启用/停用逻辑**
+- **通用启用方法（带父子结构处理）**  
+  [CommonEnable(...)](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\db\MPSqlUtil.java#L178-L201)  
+  支持根据 ID 启用或停用指定实体数据，并递归检查子节点是否存在已启用的数据。若存在，则提示先停用子数据。
+
+- **通用启用方法（简单版）**  
+  `CommonEnable(Class<T> entityClass, SFunction<T, ?> getEnableFunction, String id)`  
+  根据 ID 简单启用或停用记录，更新状态字段并设置更新人、更新时间。
+
+- **填充更新链**  
+  `fillUpdateChainWrapper(Class<T> entityClass, UpdateChainWrapper<T> updateChainWrapper)`  
+  自动填充更新链的公共字段，如 `update_by` 和 `update_time`。
+
+---
+
+#### 4. **递归查询与数据填充**
+- **递归查找父子关系数据**  
+  [findParentChildDataRecursively(...)](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\db\MPSqlUtil.java#L231-L262)  
+  使用递归 SQL 查询获取具有父子关系的数据结构（例如组织架构、菜单树等）。
+
+- **递归填充父子结构**  
+  [fillParentChildDataRecursively(...)](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\db\MPSqlUtil.java#L295-L327)  
+  将平铺数据结构递归组装成树状结构，支持自定义子级集合设置方式。
+
+- **递归填充单个父-child数据**  
+  [fillParentChildData(...)](file://D:\Project\private\Java\HaoUtil\src\main\java\org\hao\core\db\MPSqlUtil.java#L341-L356)  
+  对单个父对象递归填充其子对象列表，适用于多级嵌套结构。
+
+---
+
+#### 5. **适用场景**
+- 数据库表字段映射处理
+- 事务控制逻辑封装
+- 启用/停用业务逻辑统一处理
+- 组织架构、菜单、权限等树形结构构建
+
+---
+
+#### 6. **依赖组件**
+- **MyBatis-Plus**：提供基础 ORM 操作和 Lambda 查询能力。
+- **Hutool**：简化类型转换、集合操作等通用逻辑。
+- **Spring Util**：用于获取 `JdbcTemplate` 和 `TransactionTemplate`。
+- **Lombok**：减少样板代码。
+- 如果使用需要添加mybatis-plus依赖:
+```xml
+    <!-- mybatis-plus -->
+    <dependency>
+        <groupId>com.baomidou</groupId>
+        <artifactId>mybatis-plus-boot-starter</artifactId>
+        <version>${mybatis-plus.version}</version>
+    </dependency>
+```
 
 ---
 
