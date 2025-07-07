@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 插值计算工具类
+ * 插值计算器
  *
  * @author wanghao(helloworlwh @ 163.com)
  * @since 2025/6/2 下午1:46
  */
-public class InterpolateUtil {
+public class InterpolateCalculator {
 
 
     // 主方法：线性插值 + 校验
