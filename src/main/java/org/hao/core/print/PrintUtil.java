@@ -60,26 +60,28 @@ public enum PrintUtil {
     }
 
     public void Println(CharSequence template, Object... params) {
-        String format = StrUtil.format(template, params);
+        String format = StrUtil.formatFast(template, params);
         printSingleColor(getColor(), 2, format);
     }
 
     public void Println(CharSequence template, PrintUtil background, Object... params) {
-        String format = StrUtil.format(template, params);
+        String format = StrUtil.formatFast(template, params);
         printSingleColor(getColor(), background.getColor() + 10, 2, format);
     }
 
     public String getColorStr(CharSequence template, Object... params) {
-        String format = StrUtil.format(template, params);
+        String format = StrUtil.formatFast(template, params);
         return getColorString(getColor(), 2, format);
     }
 
     public String getColorStr(CharSequence template, PrintUtil background, Object... params) {
-        String format = StrUtil.format(template, params);
+        String format = StrUtil.formatFast(template, params);
         return getColorString(getColor(), background.getColor() + 10, 2, format);
     }
 
     /**
+     * 打印单色内容
+     *
      * @param code    颜色代号：背景颜色代号(41-46)；前景色代号(31-36)
      * @param n       数字+m：1加粗；3斜体；4下划线
      * @param content 要打印的内容
@@ -87,12 +89,22 @@ public enum PrintUtil {
      *                %s是字符串占位符，%d 是数字占位符
      */
     private void printSingleColor(int code, int n, String content) {
-        System.out.format("\33[%d;%dm%s\r\n", code, n, content + "\33[0;39m");
+        System.out.format("\33[%d;%dm%s\33[0;39m\r\n", code, n, content);
     }
 
+    /**
+     * 打印单色加背景色内容
+     *
+     * @param code     文本颜色代码
+     * @param backCode 背景颜色代码
+     * @param n        亮度或样式代码
+     * @param content  要打印的内容
+     */
     private void printSingleColor(int code, int backCode, int n, String content) {
-        System.out.format("\33[%d;%d;%dm%s\r\n", code, backCode, n, content + "\33[0;39m");
+        // 使用ANSI转义码格式化输出，以实现单色打印效果
+        System.out.format("\33[%d;%d;%dm%s\33[0;39m\r\n", code, backCode, n, content);
     }
+
 
     private String getColorString(int code, int n, String content) {
         return String.format("\33[%d;%dm%s\33[0;39m", code, n, content);

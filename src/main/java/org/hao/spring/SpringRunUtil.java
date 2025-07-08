@@ -2,8 +2,8 @@ package org.hao.spring;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import org.hao.core.StrUtil;
 import org.hao.core.ip.IPUtils;
 import org.hao.core.print.PrintUtil;
 import org.slf4j.Logger;
@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -26,6 +29,15 @@ import java.util.function.Consumer;
 public class SpringRunUtil {
     private static Logger logger = LoggerFactory.getLogger(SpringRunUtil.class);
     public static Class<?> startUpClass = null;
+    private static PrintUtil[] printUtils = new PrintUtil[]{
+            PrintUtil.RED,
+            PrintUtil.GREEN,
+            PrintUtil.YELLOW,
+            PrintUtil.BLUE,
+            PrintUtil.PURPULE,
+            PrintUtil.CYAN,
+    };
+
 
     public static void runAfter(Class<?> primarySource, String[] args, Consumer<ConfigurableApplicationContext> consumer) {
         ConfigurableApplicationContext application = SpringApplication.run(primarySource, args);
@@ -43,25 +55,27 @@ public class SpringRunUtil {
         List<String> allIP = IPUtils.allIP;
         String applicationName = SpringUtil.getApplicationName();
         String port = ObjectUtil.defaultIfEmpty(SpringUtil.getProperty("server.port"), "80");
-        port = "80".equals(port) ? "" : ":" + port;
+        port = "80".equals(port) ? "" : StrUtil.formatFast(":{}", port);
         String path = ObjectUtil.defaultIfEmpty(SpringUtil.getProperty("server.servlet.context-path"), "");
-        String printStr = "\r\n" +
-                "----------------------------------------------------------\r\n" +
-                "\tApplication " + applicationName + " is running! Access URLs:\r\n" +
-                "\tSwagger:      \thttp://localhost" + port + path + "/swagger-ui.html\r\n" +
-                "\tKnif4j:       \thttp://localhost" + port + path + "/doc.html\r\n" +
-                "\tLocal:        \thttp://localhost" + port + path + "/\r\n";
-        int allIpSize = allIP.size();
-        PrintUtil[] values = PrintUtil.values();
+        StringBuilder printStr = new StringBuilder();
+        printStr.append("\r\n")
+                .append("----------------------------------------------------------\r\n")
+                .append(StrUtil.formatFast("\tApplication {} is running! Access URLs:\r\n", applicationName))
+                .append(StrUtil.formatFast("\tSwagger:      \thttp://localhost{}{}/swagger-ui.html\r\n", port, path))
+                .append(StrUtil.formatFast("\tKnif4j:       \thttp://localhost{}{}/doc.html\r\n", port, path))
+                .append(StrUtil.formatFast("\tLocal:        \thttp://localhost{}{}/\r\n", port, path));
 
+
+        int allIpSize = allIP.size();
+        List<PrintUtil> list = Arrays.asList(printUtils);
+        Collections.shuffle(list);
         for (int i = 0; i < allIpSize; i++) {
             String ipStr = allIP.get(i);
-            int index = i + 1;
-            String format = StrUtil.format("\tExternal[{}]: \thttp://{}{}{}\r\n", index, ipStr, port, path);
-            printStr += RandomUtil.randomEle(values).getColorStr(format);
+            printStr.append(list.get(i % list.size()).getColorStr("\tExternal[{}]: \thttp://{}{}{}\r\n", (i + 1), ipStr, port, path));
+
         }
-        printStr += "----------------------------------------------------------";
-        logger.warn(printStr);
+        printStr.append("----------------------------------------------------------");
+        logger.warn(printStr.toString());
     }
 
 }

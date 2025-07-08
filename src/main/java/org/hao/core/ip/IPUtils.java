@@ -6,6 +6,7 @@ import org.hao.core.thread.ThreadUtil;
 import org.hao.vo.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -27,8 +28,8 @@ import java.util.List;
 
 public class IPUtils {
     private static Logger logger = LoggerFactory.getLogger(IPUtils.class);
-    public static List<String> allIP = new ArrayList<>();
-    public static List<String> localAddresses = new ArrayList<>();
+    public static List<String> allIP;
+    public static List<String> localAddresses;
 
     static {
         Tuple<List<String>, List<String>> addressTuple = getAllIP();
@@ -36,7 +37,7 @@ public class IPUtils {
         localAddresses = addressTuple.getSecond();
     }
 
-    public IPUtils() {
+    private IPUtils() {
     }
 
 
