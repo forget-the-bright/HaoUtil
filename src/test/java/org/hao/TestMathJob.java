@@ -1,6 +1,7 @@
 package org.hao;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hao.core.ip.IPUtils;
 import org.hao.core.math.CopperMassCalculator;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 public class TestMathJob {
     @Test
     public void testMath() throws Exception {
+        String localIP = IPUtils.getLocalIP();
         // 示例输入参数
         double h1 = 0.510; // 初始铜面高度（米）= 510 mm
         double h2 = 0.622; // 结束铜面高度（米）= 622 mm

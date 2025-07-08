@@ -1,8 +1,6 @@
 package org.hao.core.math;
 
-import org.hao.core.print.PrintUtil;
 import lombok.extern.slf4j.Slf4j;
-import cn.hutool.core.util.StrUtil;
 
 /**
  * 熔炼炉中铜质量计算工具类。 提供基于拱底截面积模型计算熔池内铜质量的方法， 并支持粗铜排放量相关计算。

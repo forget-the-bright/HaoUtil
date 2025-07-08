@@ -1,6 +1,7 @@
 package org.hao.core.compiler;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
@@ -71,7 +72,7 @@ public class CompilerUtil {
      * 系统临时文件夹路径，通过 {@link System#getProperties()} 获取。
      * 用于构建存放依赖 JAR 的临时目录。
      */
-    private static String tmpdir = System.getProperties().getProperty("java.io.tmpdir");
+    private static final String tmpdir = System.getProperties().getProperty("java.io.tmpdir");
 
 
     /**
@@ -207,7 +208,7 @@ public class CompilerUtil {
 
         // 构建内存文件管理器：使用 InMemoryJavaFileManager 管理源码与字节码的内存存储
         InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(SYSTEM_COMPILER.getStandardFileManager(null, null, null));
-        List<JavaFileObject> compilationUnits = Arrays.asList(new JavaSourceFromString(className, javaCode));
+        List<JavaFileObject> compilationUnits = ListUtil.of(new JavaSourceFromString(className, javaCode));
 
         // 执行编译任务
         // 构造编译任务：将输入的 Java 源码字符串封装为 JavaFileObject 并设置编译参数
@@ -216,7 +217,6 @@ public class CompilerUtil {
         // 创建一个选项列表，用于配置编译任务的参数
         List<String> options = new ArrayList<>();
         if (classpath.isEmpty()) {
-            classpath.clear();
             classpath.addAll(loadClassPath());
         }
         if (CollUtil.isNotEmpty(classpath)) {
@@ -242,7 +242,7 @@ public class CompilerUtil {
                 fileManager, // 文件管理器，负责管理编译过程中的文件
                 diagnosticCollector, // 诊断收集器，收集编译信息
                 options, // 编译选项
-                (Iterable) null, // 不使用类路径入口
+                null, // 不使用类路径入口 (Iterable)
                 compilationUnits); // 编译单元集合，包含需要编译的Java源文件
         // 尝试执行编译任务
         try {
@@ -312,7 +312,6 @@ public class CompilerUtil {
         // 创建一个选项列表，用于配置编译任务的参数
         List<String> options = new ArrayList<>();
         if (classpath.isEmpty()) {
-            classpath.clear();
             classpath.addAll(loadClassPath());
         }
         if (CollUtil.isNotEmpty(classpath)) {
@@ -338,7 +337,7 @@ public class CompilerUtil {
                 fileManager, // 文件管理器，负责管理编译过程中的文件
                 diagnosticCollector, // 诊断收集器，收集编译信息
                 options, // 编译选项
-                (Iterable) null, // 不使用类路径入口
+                null, // 不使用类路径入口(Iterable)
                 compilationUnits); // 编译单元集合，包含需要编译的Java源文件
         // 尝试执行编译任务
         try {
@@ -377,9 +376,8 @@ public class CompilerUtil {
      * @param className 完整类名（含包路径）
      * @param params    构造函数所需的参数列表，用于匹配相应的构造方法
      * @return 返回创建的类实例
-     * @throws Exception 如果类未找到、构造方法匹配失败或实例化过程中发生异常
      */
-    public static Object createInstance(String className, Object... params) throws Exception {
+    public static Object createInstance(String className, Object... params) {
         Class<?> clazz = classCache.get(className);
         if (clazz == null) {
             throw new IllegalArgumentException("Class not found: " + className);
@@ -442,18 +440,10 @@ public class CompilerUtil {
      * @throws IOException 如果提取过程中发生 I/O 错误
      */
     public static synchronized TreeSet<String> extractDependencyJarsToTempDir(String jarBaseFile) throws IOException {
-        /**
-         * 创建或复用已存在的临时目录用于存放提取出的依赖 JAR 文件。
-         *
-         * <p>
-         * 如果是首次提取（jarFileIsExtract == false），则清空旧目录并重新创建；
-         * 如果非首次提取且目录存在，则尝试复用已有文件以提升性能，避免重复 I/O 操作。
-         * </p>
-         *
-         * <p>
-         * 该逻辑确保在多线程环境下仅解压一次，并通过 classpath 缓存加速后续调用。
-         * </p>
-         */
+        //创建或复用已存在的临时目录用于存放提取出的依赖 JAR 文件。
+        //如果是首次提取（jarFileIsExtract == false），则清空旧目录并重新创建；
+        //如果非首次提取且目录存在，则尝试复用已有文件以提升性能，避免重复 I/O 操作。
+        //该逻辑确保在多线程环境下仅解压一次，并通过 classpath 缓存加速后续调用。
         File tempDir = new File(tmpdir + File.separator + "tempCompilerDir");
 
         // 存储临时目录的绝对路径供外部访问
@@ -462,11 +452,7 @@ public class CompilerUtil {
         // 初始化类路径集合，用于保存依赖 JAR 的路径
         TreeSet<String> classpath = new TreeSet<>();
 
-        if (!jarFileIsExtract) {
-            // 首次提取：删除可能存在的旧目录并新建
-            FileUtil.del(tempDir);
-            tempDir.mkdir();
-        } else {
+        if (jarFileIsExtract) {
             // 非首次提取：尝试复用已存在的依赖 JAR 文件
             if (tempDir.exists() || tempDir.isDirectory()) {
                 File[] files = tempDir.listFiles();
@@ -481,11 +467,10 @@ public class CompilerUtil {
                     return classpath;
                 }
             }
-            // 若目录为空或不存在，清理后重建目录
-            FileUtil.del(tempDir);
-            tempDir.mkdir();
         }
-
+        // 若目录为空或不存在，清理后重建目录
+        FileUtil.del(tempDir);
+        tempDir.mkdir();
 
         // 获取当前 jar 文件路径
         File jarFile = new File(URLDecoder.decode(jarBaseFile, "UTF-8"));
@@ -533,9 +518,9 @@ public class CompilerUtil {
      *
      * @return 包含本地类路径的有序集合（TreeSet），保证路径唯一且按字母顺序排列
      */
+    @SuppressWarnings("unchecked")
     public static TreeSet<String> loadLocalClassPath() {
         // 创建类路径集合，使用 TreeSet 保证路径唯一且有序
-        TreeSet<String> classpath = new TreeSet<>();
 
         // 获取当前线程上下文类加载器，用于提取运行时依赖路径
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -544,14 +529,13 @@ public class CompilerUtil {
         List<Object> jars = new ArrayList<>();
 
         // 遍历类加载器链，包括父类加载器，直到为空为止
-        while (true) {
-            if (contextClassLoader == null) break;
+        while (contextClassLoader != null) {
 
             // 使用反射获取类加载器中的 ucp（URLClassPath）对象
             Object ucp = ReflectUtil.getFieldValue(contextClassLoader, "ucp");
 
             // 从 ucp 中获取 loaders 列表（每个元素代表一个类路径条目）
-            List<Object> loaders = (ArrayList) ReflectUtil.getFieldValue(ucp, "loaders");
+            List loaders = Convert.toList(ReflectUtil.getFieldValue(ucp, "loaders")) ;
 
             // 如果有可用的加载器条目，则加入集合
             if (CollUtil.isNotEmpty(loaders)) {
@@ -563,7 +547,7 @@ public class CompilerUtil {
         }
 
         // 将类加载器条目转换为实际路径，并进行标准化处理
-        List<String> baseUrls = jars.stream().map(loader -> {
+        TreeSet<String> baseUrls = jars.stream().map(loader -> {
             // 使用反射获取每个 loader 的 base 字段，即原始路径字符串
             String baseUrl = Convert.toStr(ReflectUtil.getFieldValue(loader, "base"));
 
@@ -579,13 +563,10 @@ public class CompilerUtil {
             }
             // 默认返回原始路径（适用于未知协议或已处理过的路径）
             return baseUrl;
-        }).collect(Collectors.toList());
-
-        // 将标准化后的路径添加到类路径集合中
-        classpath.addAll(baseUrls);
+        }).collect(Collectors.toCollection(TreeSet::new));
 
         // 返回最终构建的类路径集合
-        return classpath;
+        return baseUrls;
 
     }
 
@@ -617,5 +598,9 @@ public class CompilerUtil {
         } catch (Exception e) {
             throw new IllegalArgumentException("解析类名失败: " + e.getMessage(), e);
         }
+    }
+
+    public static String getTempDirName() {
+        return tempDirName;
     }
 }

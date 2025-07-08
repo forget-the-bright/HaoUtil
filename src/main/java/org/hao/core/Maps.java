@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  * @version 1.0
  * @since 2021.12.13
  */
-
+@SuppressWarnings("unchecked")
 public class Maps {
     public static Map<String, Object> asMap(Object[]... entrys) {
         return asMap(Arrays.asList(entrys));

@@ -2,13 +2,10 @@ package org.hao.core.ip;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import org.hao.core.thread.ThreadUtil;
+import org.hao.vo.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cloud.commons.util.InetUtilsProperties;
-import org.springframework.util.StringUtils;
-
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -31,9 +28,12 @@ import java.util.List;
 public class IPUtils {
     private static Logger logger = LoggerFactory.getLogger(IPUtils.class);
     public static List<String> allIP = new ArrayList<>();
+    public static List<String> localAddresses = new ArrayList<>();
 
     static {
-        allIP = getAllIP();
+        Tuple<List<String>, List<String>> addressTuple = getAllIP();
+        allIP = addressTuple.getFirst();
+        localAddresses = addressTuple.getSecond();
     }
 
     public IPUtils() {
@@ -41,30 +41,15 @@ public class IPUtils {
 
 
     public static String getLocalIP() {
-
-        try {
-            Class.forName("org.springframework.cloud.commons.util.InetUtilsProperties");
-            InetUtilsProperties inetUtilsProperties = SpringUtil.getBean(InetUtilsProperties.class);
-            List<String> preferredNetworks = inetUtilsProperties.getPreferredNetworks();
-            if (allIP.isEmpty()) return "127.0.0.1";
-            if (CollUtil.isEmpty(preferredNetworks)) return allIP.get(0);
-            for (String ip : allIP) {
-                for (String preferredNetwork : preferredNetworks) {
-                    if (ip.startsWith(preferredNetwork)) {
-                        return ip;
-                    }
-                }
-            }
-
-        } catch (ClassNotFoundException e) {
-
+        if (CollUtil.isNotEmpty(localAddresses)) {
+            return localAddresses.get(0);
         }
         return allIP.get(0);
-        //InetAddress.getLocalHost().getHostAddress()
     }
 
-    private static List<String> getAllIP() {
+    private static Tuple<List<String>, List<String>> getAllIP() {
         List<String> ipAddresses = new ArrayList<>();
+        List<String> localAddresses = new ArrayList<>();
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
             while (networkInterfaces.hasMoreElements()) {
@@ -72,8 +57,26 @@ public class IPUtils {
                 Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
                 while (inetAddresses.hasMoreElements()) {
                     InetAddress inetAddress = inetAddresses.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof InetAddress && inetAddress instanceof java.net.Inet4Address) {
+                    if (!inetAddress.isLoopbackAddress() &&
+                            inetAddress instanceof InetAddress &&
+                            inetAddress instanceof java.net.Inet4Address
+                    ) {
                         ipAddresses.add(inetAddress.getHostAddress());
+                    }
+
+                    String name = networkInterface.getDisplayName();
+                    // 常见的虚拟网卡或容器相关接口，按名字过滤
+                    if (!(name.contains("Virtual") ||
+                            name.contains("VPN") ||
+                            StrUtil.startWithIgnoreCase(name, "br-") ||
+                            StrUtil.startWithIgnoreCase(name, "tun") ||
+                            name.contains("Tunnel") ||
+                            name.contains("Adapter") ||
+                            name.contains("Sangfor")) &&
+                            !inetAddress.isLoopbackAddress() &&
+                            inetAddress instanceof InetAddress &&
+                            inetAddress instanceof java.net.Inet4Address) {
+                        localAddresses.add(inetAddress.getHostAddress());
                     }
                 }
             }
@@ -81,7 +84,8 @@ public class IPUtils {
             e.printStackTrace();
         }
         ipAddresses.sort(Comparator.comparing(String::toString));
-        return ipAddresses;
+        Tuple<List<String>, List<String>> addrressTuple = Tuple.newTuple(ipAddresses, localAddresses);
+        return addrressTuple;
     }
 
     public static String getIpAddr(HttpServletRequest request) {
@@ -89,23 +93,23 @@ public class IPUtils {
 
         try {
             ip = request.getHeader("x-forwarded-for");
-            if (StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
+            if (StrUtil.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
                 ip = request.getHeader("Proxy-Client-IP");
             }
 
-            if (StringUtils.isEmpty(ip) || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            if (StrUtil.isEmpty(ip) || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
                 ip = request.getHeader("WL-Proxy-Client-IP");
             }
 
-            if (StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
+            if (StrUtil.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
                 ip = request.getHeader("HTTP_CLIENT_IP");
             }
 
-            if (StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
+            if (StrUtil.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
                 ip = request.getHeader("HTTP_X_FORWARDED_FOR");
             }
 
-            if (StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
+            if (StrUtil.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
                 ip = request.getRemoteAddr();
             }
         } catch (Exception var3) {

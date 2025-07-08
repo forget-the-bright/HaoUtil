@@ -13,7 +13,7 @@ import java.util.function.Supplier;
  * @author wanghao
  * @since 2021.12.13
  */
-
+@SuppressWarnings("unchecked")
 public class Lists {
 
     /**
@@ -26,6 +26,7 @@ public class Lists {
      * @param supplier 元素的生成器，用于生成列表中的每个元素
      * @return 返回一个包含由生成器生成的元素的列表
      */
+
     public static <T> List<T> generateList(int length, Supplier<T> supplier) {
         // 创建一个ArrayList实例来存储生成的元素
         ArrayList<T> arrayList = new ArrayList<>();
@@ -44,7 +45,6 @@ public class Lists {
         Collections.addAll(arrayList, values);
         return arrayList;
     }
-
 
     public static <T> List<T> asList(Class<? extends List> aClass, T... values) {
         List<T> list = null;

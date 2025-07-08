@@ -45,6 +45,7 @@ public class FailSafeAspect {
      */
 
     @Around("failSafePointCut()")
+    @SuppressWarnings("unchecked")
     public Object failSafeAspectAround(ProceedingJoinPoint joinPoint) throws Throwable {
         // 获取方法签名
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();

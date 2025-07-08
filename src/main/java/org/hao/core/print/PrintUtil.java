@@ -1,5 +1,7 @@
 package org.hao.core.print;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
  * 控制台彩色打印工具类，通过 ANSI 转义序列实现不同颜色和样式的文本输出。
  *
@@ -56,22 +58,24 @@ public enum PrintUtil {
         throw new AbstractMethodError();
     }
 
-    public void Println(Object val) {
-        val = val == null ? "null" : val;
-        printSingleColor(getColor(), 2, val.toString());
-    }
-    public void Println(Object val, PrintUtil background) {
-        val = val == null ? "null" : val;
-        printSingleColor(getColor(), background.getColor() + 10, 2, val.toString());
-    }
-    public String getColorStr(Object val) {
-        val = val == null ? "null" : val;
-        return getColorString(getColor(), 2, val.toString());
+    public void Println(CharSequence template, Object... params) {
+        String format = StrUtil.format(template, params);
+        printSingleColor(getColor(), 2, format);
     }
 
-    public String getColorStr(Object val, PrintUtil background) {
-        val = val == null ? "null" : val;
-        return getColorString(getColor(), background.getColor() + 10, 2, val.toString());
+    public void Println(CharSequence template, PrintUtil background, Object... params) {
+        String format = StrUtil.format(template, params);
+        printSingleColor(getColor(), background.getColor() + 10, 2, format);
+    }
+
+    public String getColorStr(CharSequence template, Object... params) {
+        String format = StrUtil.format(template, params);
+        return getColorString(getColor(), 2, format);
+    }
+
+    public String getColorStr(CharSequence template, PrintUtil background, Object... params) {
+        String format = StrUtil.format(template, params);
+        return getColorString(getColor(), background.getColor() + 10, 2, format);
     }
 
     /**
