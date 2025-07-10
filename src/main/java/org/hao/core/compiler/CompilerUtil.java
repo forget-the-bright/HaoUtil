@@ -370,6 +370,72 @@ public class CompilerUtil {
         return classLoader;
     }
 
+    public static void compileToLocalFile(String tempDirName, Writer writer, String... javaCodes) throws IOException {
+        if (StrUtil.isEmpty(tempDirName)) {
+            tempDirName = "./tempOUTPUT";
+        }
+        File outputDir = new File(tempDirName);
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+        List<JavaFileObject> compilationUnits = new ArrayList<>();
+        for (String javaCode : javaCodes) {
+            String className = getClassNameByCode(javaCode);
+            compilationUnits.add(new JavaSourceFromString(className, javaCode));
+        }
+
+        // 执行编译任务
+        // 构造编译任务：将输入的 Java 源码字符串封装为 JavaFileObject 并设置编译参数
+        // 创建一个诊断收集器，用于收集编译过程中的信息
+        DiagnosticCollector<? super JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
+        // 创建一个选项列表，用于配置编译任务的参数
+        List<String> options = new ArrayList<>();
+        if (classpath.isEmpty()) {
+            classpath.addAll(loadClassPath());
+        }
+        if (CollUtil.isNotEmpty(classpath)) {
+            options.add("-cp");
+            options.add(StrUtil.join(File.pathSeparator, classpath));
+            /*
+             * 补充了编译时启用 lombok或 其他注解生成库 的内容。java 8 需要系统库添加jdk环境的 tools.jar,在cp中或者jre的lib里面添加都可以
+             * 大于java 8 的环境jdk 默认移除了tools.jar 并且jre中默认集成此环境,无需过多配置就可以使用 注解类生成库 功能。
+             *
+             * -processorpath 指定注解处理器的类路径，用于处理注解类,但是实际测试中有无此配置并没有效果，是否启用注解生成还是看jdk版本和tools.jar.
+             * 这里保留了此配置, 但是基本可以忽略掉, 因为没有效果.
+             */
+            List<String> lombokJar = classpath.stream().filter(q -> q.contains("lombok")).collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(lombokJar)) {
+                options.add("-processorpath");
+                options.add(StrUtil.join(File.pathSeparator, lombokJar));
+            }
+        }
+        options.add("-d");
+        options.add(outputDir.getAbsolutePath());
+        // 获取一个编译任务实例
+        // 此处省略了SYSTEM_COMPILER和fileManager的初始化过程
+        JavaCompiler.CompilationTask task = SYSTEM_COMPILER.getTask(
+                writer, // Writer对象, 用于输出编译信息
+                null, // 文件管理器，负责管理编译过程中的文件
+                diagnosticCollector, // 诊断收集器，收集编译信息
+                options, // 编译选项
+                null, // 不使用类路径入口(Iterable)
+                compilationUnits); // 编译单元集合，包含需要编译的Java源文件
+        // 尝试执行编译任务
+        try {
+            // 如果编译失败
+            if (!task.call()) {
+                // 抛出异常，包含编译失败的详细信息
+                // todo 这里可以做一些处理,比如编译失败，如果是jar环境，可以清理掉temp-classpath 重新解压加载，
+                //  但是问题是，如果代码就是引用了找不到的库，这里重复加载，就会消耗系统性能， 磁盘io
+                throw new HaoException("编译失败: " + getDiagnosticMessages(diagnosticCollector));
+            }
+        } finally {
+            // 确保文件管理器被正确关闭，释放资源
+            // IoUtil.close(fileManager);
+        }
+    }
+
+
     /**
      * 根据指定的类名从缓存中获取对应的 Class 对象，并通过反射创建其实例。
      *
@@ -535,7 +601,7 @@ public class CompilerUtil {
             Object ucp = ReflectUtil.getFieldValue(contextClassLoader, "ucp");
 
             // 从 ucp 中获取 loaders 列表（每个元素代表一个类路径条目）
-            List loaders = Convert.toList(ReflectUtil.getFieldValue(ucp, "loaders")) ;
+            List loaders = Convert.toList(ReflectUtil.getFieldValue(ucp, "loaders"));
 
             // 如果有可用的加载器条目，则加入集合
             if (CollUtil.isNotEmpty(loaders)) {

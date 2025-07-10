@@ -58,7 +58,7 @@ public class TestCompilerJob {
                 "import org.hao.annotation.LogDefine;\n" +
                 "import lombok.extern.slf4j.Slf4j;\n" +
                 "\n" +
-                "@Slf4j\n"+
+                "@Slf4j\n" +
                 "public class Greeter {\n" +
                 "    @LogDefine(\"123\")        " +
                 "    public void sayHello(String name) {\n" +
@@ -81,6 +81,39 @@ public class TestCompilerJob {
         // 创建类实例并调用方法
         Object obj = clazz.getDeclaredConstructor().newInstance();
         sayHello.invoke(obj, "World");
+    }
+
+    /**
+     * 测试编译和运行动态生成的 Java 类。
+     *
+     * @throws Exception 如果编译或运行失败
+     */
+    @Test
+    public void testHaoComplilerLocal() throws Exception {
+        long start = System.currentTimeMillis();
+        String className = "com.example.demo.Greeter";
+        String javaCode = "package com.example.demo;\n" +
+                "\n" +
+                "import org.hao.core.print.PrintUtil;\n" +
+                "import org.hao.spring.SpringRunUtil;\n" +
+                "import org.hao.annotation.LogDefine;\n" +
+                "import lombok.extern.slf4j.Slf4j;\n" +
+                "\n" +
+                "@Slf4j\n" +
+                "public class Greeter {\n" +
+                "    @LogDefine(\"123\")        " +
+                "    public void sayHello(String name) {\n" +
+                "        System.out.println(\"Hello, \" + name + \"!\");\n" +
+                "        PrintUtil.BLUE.Println(\"name = \" + name);\n" +
+                "        SpringRunUtil.printRunInfo();\n" +
+                "        log.info(\"name:{}\",name);\n" +
+                "    }\n" +
+                "}";
+        String currentWorkingDirectory = System.getProperty("user.dir");
+        System.out.println("Current working directory: " + currentWorkingDirectory);
+        CompilerUtil.compileToLocalFile("./project_output", null, javaCode);
+        long end = System.currentTimeMillis();
+        log.info("testHaoCompliler 编译耗时：{}ms", end - start);
     }
 
     @Test
