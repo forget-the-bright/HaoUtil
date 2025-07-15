@@ -27,7 +27,7 @@ import java.util.List;
  */
 
 public class IPUtils {
-    private static Logger logger = LoggerFactory.getLogger(IPUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(IPUtils.class);
     public static List<String> allIP;
     public static List<String> localAddresses;
 
@@ -59,7 +59,6 @@ public class IPUtils {
                 while (inetAddresses.hasMoreElements()) {
                     InetAddress inetAddress = inetAddresses.nextElement();
                     if (!inetAddress.isLoopbackAddress() &&
-                            inetAddress instanceof InetAddress &&
                             inetAddress instanceof java.net.Inet4Address
                     ) {
                         ipAddresses.add(inetAddress.getHostAddress());
@@ -75,18 +74,16 @@ public class IPUtils {
                             name.contains("Adapter") ||
                             name.contains("Sangfor")) &&
                             !inetAddress.isLoopbackAddress() &&
-                            inetAddress instanceof InetAddress &&
                             inetAddress instanceof java.net.Inet4Address) {
                         localAddresses.add(inetAddress.getHostAddress());
                     }
                 }
             }
         } catch (SocketException e) {
-            e.printStackTrace();
+            logger.error("获取IP地址异常", e);
         }
         ipAddresses.sort(Comparator.comparing(String::toString));
-        Tuple<List<String>, List<String>> addrressTuple = Tuple.newTuple(ipAddresses, localAddresses);
-        return addrressTuple;
+        return Tuple.newTuple(ipAddresses, localAddresses);
     }
 
     public static String getIpAddr(HttpServletRequest request) {
@@ -98,7 +95,7 @@ public class IPUtils {
                 ip = request.getHeader("Proxy-Client-IP");
             }
 
-            if (StrUtil.isEmpty(ip) || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
+            if (StrUtil.isEmpty(ip) || "unknown".equalsIgnoreCase(ip)) {
                 ip = request.getHeader("WL-Proxy-Client-IP");
             }
 
@@ -141,12 +138,18 @@ public class IPUtils {
         // 获取服务器名称，即域名或IP地址
         String serverName = request.getServerName();
         // 获取服务器端口
+
+        // 返回构造的基础URL
+        return getString(request, scheme, serverName);
+    }
+
+    private static String getString(HttpServletRequest request, String scheme, String serverName) {
         int serverPort = request.getServerPort();
         // 获取应用的上下文路径
         String contextPath = request.getContextPath();
 
         // 初始化基础URL变量
-        String baseDomainPath = null;
+        String baseDomainPath;
         // 定义标准HTTP端口
         int httpPort = 80;
         // 根据服务器端口是否为标准HTTP端口，构造基础URL
