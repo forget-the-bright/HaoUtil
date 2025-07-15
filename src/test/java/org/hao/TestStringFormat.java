@@ -23,6 +23,7 @@ public class TestStringFormat {
         PrintUtil.RED.Println("hello world", BackColorSytle.BRIGHT_CYAN, FontSytle.BOLD);
         ColorText.Builder()
                 .FgRed()
+                .FgBlue()
                 .BgBrightPurple()
                 .FontBold()
                 .FontItalic()
