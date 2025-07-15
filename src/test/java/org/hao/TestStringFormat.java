@@ -16,10 +16,18 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 public class TestStringFormat {
     @Test
+    public void test4() {
+        PrintUtil.RED.Println("hello world");
+        PrintUtil.RED.Println( "hello world");
+        SpringRunUtil.printRunInfo();
+    }
+
+    @Test
     public void test3() {
         SpringRunUtil.printRunInfo();
         SpringRunUtil.printRunInfo();
     }
+
     @Test
     public void test2() {
         // 创建一个计时器
@@ -84,7 +92,7 @@ public class TestStringFormat {
 
         // 启动第一个任务
         stopWatch.start("formatFast");
-        System.out.println(StrUtil.formatFast("姓名：{}，{} 价格：{:.2f}", "张三",true, 99.345));
+        System.out.println(StrUtil.formatFast("姓名：{}，{} 价格：{:.2f}", "张三", true, 99.345));
         System.out.println(StrUtil.formatFast("姓名：{}，价格：{:d},{:f} ", "张三", 99, 234.345, 123));
         // 输出：姓名：张三，价格：99.35
         System.out.println(StrUtil.formatFast("用户：{}，ID：{}，余额：{:.2f}", "Tom", 1001, 88.234));
