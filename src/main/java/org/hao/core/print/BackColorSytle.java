@@ -84,7 +84,7 @@ public enum BackColorSytle {
     /**
      * 高亮紫色背景，通常显示为更鲜艳或明亮的紫色。
      */
-    BRIGHT_PURPLE(105),
+    BRIGHT_PURPULE(105),
 
     /**
      * 高亮青色背景，通常显示为更鲜艳或明亮的青色。

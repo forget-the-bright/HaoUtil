@@ -5,6 +5,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import org.hao.core.StrUtil;
 import org.hao.core.ip.IPUtils;
+import org.hao.core.print.FontSytle;
 import org.hao.core.print.PrintUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,7 @@ public class SpringRunUtil {
         Collections.shuffle(list);
         for (int i = 0; i < allIpSize; i++) {
             String ipStr = allIP.get(i);
-            printStr.append(list.get(i % list.size()).getColorStr("\tExternal[{}]: \thttp://{}{}{}\r\n", (i + 1), ipStr, port, path));
+            printStr.append(list.get(i % list.size()).getColorStr("\tExternal[{}]: \thttp://{}{}{}\r\n", FontSytle.BOLD, (i + 1), ipStr, port, path));
 
         }
         printStr.append("----------------------------------------------------------");

@@ -3,6 +3,9 @@ package org.hao;
 import cn.hutool.core.date.StopWatch;
 import lombok.extern.slf4j.Slf4j;
 import org.hao.core.StrUtil;
+import org.hao.core.print.BackColorSytle;
+import org.hao.core.print.ColorText;
+import org.hao.core.print.FontSytle;
 import org.hao.core.print.PrintUtil;
 import org.hao.spring.SpringRunUtil;
 import org.junit.jupiter.api.Test;
@@ -16,9 +19,20 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 public class TestStringFormat {
     @Test
+    public void test5() {
+        PrintUtil.RED.Println("hello world", BackColorSytle.BRIGHT_CYAN, FontSytle.BOLD);
+        ColorText.Builder()
+                .TextRed()
+                .BgBrightPurple()
+                .FontBold()
+                .FontItalic()
+                .Println("hello world");
+        SpringRunUtil.printRunInfo();
+    }
+    @Test
     public void test4() {
-        PrintUtil.RED.Println("hello world");
-        PrintUtil.RED.Println( "hello world");
+        PrintUtil.RED.Println("hello world", BackColorSytle.BRIGHT_CYAN, FontSytle.BOLD);
+        PrintUtil.BRIGHT_RED.Println( "hello world", FontSytle.UNDERLINE);
         SpringRunUtil.printRunInfo();
     }
 
