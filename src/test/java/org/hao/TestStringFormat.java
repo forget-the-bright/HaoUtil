@@ -22,7 +22,7 @@ public class TestStringFormat {
     public void test5() {
         PrintUtil.RED.Println("hello world", BackColorSytle.BRIGHT_CYAN, FontSytle.BOLD);
         ColorText.Builder()
-                .TextRed()
+                .FgRed()
                 .BgBrightPurple()
                 .FontBold()
                 .FontItalic()

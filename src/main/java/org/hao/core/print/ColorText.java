@@ -11,9 +11,9 @@ import org.hao.core.StrUtil;
  *
  * <pre>{@code
  * String coloredText = ColorText.Builder()
- *     .Red()             // 设置红色
- *     .BgBlack()         // 设置黑色背景
- *     .Bold()            // 加粗
+ *     .FgRed()             // 设置前景(字体)红色
+ *     .BgBlack()         // 设置背景黑色
+ *     .FontBold()            // 字体加粗
  *     .build("Hello");   // 构建带样式的字符串
  * }</pre>
  *
@@ -51,12 +51,14 @@ public class ColorText {
         sytleBuilder.append(sytle);
     }
 
+    //region Foreground 前景(字体)色
+
     /**
      * 设置文本颜色为黑色。
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBlack() {
+    public ColorText FgBlack() {
         addSytle(PrintUtil.BLACK.getColor());
         return this;
     }
@@ -66,7 +68,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextRed() {
+    public ColorText FgRed() {
         addSytle(PrintUtil.RED.getColor());
         return this;
     }
@@ -76,7 +78,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextGreen() {
+    public ColorText FgGreen() {
         addSytle(PrintUtil.GREEN.getColor());
         return this;
     }
@@ -86,7 +88,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextYellow() {
+    public ColorText FgYellow() {
         addSytle(PrintUtil.YELLOW.getColor());
         return this;
     }
@@ -96,7 +98,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBlue() {
+    public ColorText FgBlue() {
         addSytle(PrintUtil.BLUE.getColor());
         return this;
     }
@@ -106,7 +108,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextPurple() {
+    public ColorText FgPurple() {
         addSytle(PrintUtil.PURPULE.getColor());
         return this;
     }
@@ -116,7 +118,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextCyan() {
+    public ColorText FgCyan() {
         addSytle(PrintUtil.CYAN.getColor());
         return this;
     }
@@ -126,7 +128,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextWhite() {
+    public ColorText FgWhite() {
         addSytle(PrintUtil.WHITE.getColor());
         return this;
     }
@@ -136,7 +138,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightBlack() {
+    public ColorText FgBrightBlack() {
         addSytle(PrintUtil.BRIGHT_BLACK.getColor());
         return this;
     }
@@ -146,7 +148,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightRed() {
+    public ColorText FgBrightRed() {
         addSytle(PrintUtil.BRIGHT_RED.getColor());
         return this;
     }
@@ -156,7 +158,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightGreen() {
+    public ColorText FgBrightGreen() {
         addSytle(PrintUtil.BRIGHT_GREEN.getColor());
         return this;
     }
@@ -166,7 +168,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightYellow() {
+    public ColorText FgBrightYellow() {
         addSytle(PrintUtil.BRIGHT_YELLOW.getColor());
         return this;
     }
@@ -176,7 +178,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightBlue() {
+    public ColorText FgBrightBlue() {
         addSytle(PrintUtil.BRIGHT_BLUE.getColor());
         return this;
     }
@@ -186,7 +188,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightPurple() {
+    public ColorText FgBrightPurple() {
         addSytle(PrintUtil.BRIGHT_PURPLE.getColor());
         return this;
     }
@@ -196,7 +198,7 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightCyan() {
+    public ColorText FgBrightCyan() {
         addSytle(PrintUtil.BRIGHT_CYAN.getColor());
         return this;
     }
@@ -206,8 +208,21 @@ public class ColorText {
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText TextBrightWhite() {
+    public ColorText FgBrightWhite() {
         addSytle(PrintUtil.BRIGHT_WHITE.getColor());
+        return this;
+    }
+    // endregion
+
+    // region Background 背景色
+
+    /**
+     * 设置背景颜色为黑色。
+     *
+     * @return 当前 {@link ColorText} 实例，支持链式调用
+     */
+    public ColorText BgBlack() {
+        addSytle(BackColorSytle.BLACK.getCode());
         return this;
     }
 
@@ -282,12 +297,12 @@ public class ColorText {
     }
 
     /**
-     * 设置背景颜色为黑色。
+     * 设置背景颜色为高亮黑色。
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
      */
-    public ColorText BgBlack() {
-        addSytle(BackColorSytle.BLACK.getCode());
+    public ColorText BgBrightBlack() {
+        addSytle(BackColorSytle.BRIGHT_BLACK.getCode());
         return this;
     }
 
@@ -360,6 +375,10 @@ public class ColorText {
         addSytle(BackColorSytle.BRIGHT_WHITE.getCode());
         return this;
     }
+    // endregion
+
+
+    // region Font 字体样式
 
     /**
      * 设置文本为加粗样式。
@@ -368,6 +387,16 @@ public class ColorText {
      */
     public ColorText FontBold() {
         addSytle(FontSytle.BOLD.getCode());
+        return this;
+    }
+
+    /**
+     * 设置文本为淡色或次亮度，部分终端可能不支持。
+     *
+     * @return 当前 {@link ColorText} 实例，支持链式调用
+     */
+    public ColorText FontDim() {
+        addSytle(FontSytle.DIM.getCode());
         return this;
     }
 
@@ -402,6 +431,16 @@ public class ColorText {
     }
 
     /**
+     * 设置文本为快速闪烁样式（部分终端支持）。
+     *
+     * @return 当前 {@link ColorText} 实例，支持链式调用
+     */
+    public ColorText FontBlinkFast() {
+        addSytle(FontSytle.BLINK_FAST.getCode());
+        return this;
+    }
+
+    /**
      * 设置文本为前景色与背景色反转样式。
      *
      * @return 当前 {@link ColorText} 实例，支持链式调用
@@ -430,6 +469,7 @@ public class ColorText {
         addSytle(FontSytle.STRIKETHROUGH.getCode());
         return this;
     }
+    // endregion
 
     /**
      * 构建最终带样式的字符串，使用当前配置的颜色和样式。
