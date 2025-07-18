@@ -121,13 +121,13 @@ public class IPUtils {
      * 获取基础URL
      * 该方法用于动态生成当前应用的基URL，考虑了HTTP和HTTPS以及不同服务器端口的情况
      * 主要用途包括生成绝对URL路径，例如在发送邮件、生成支付签名等场景中需要完整的URL时使用
-     *
+     * @param request 当前请求对象
      * @return 当前应用的基础URL字符串
      */
-    public static String getBaseUrl() {
-        // 获取当前线程关联的HTTP请求对象
-        HttpServletRequest request = ThreadUtil.getRequest();
-
+    public static String getBaseUrl(HttpServletRequest request) {
+        if (request == null) {
+            return "";
+        }
         // 尝试从请求头中获取实际使用的方案（如http、https），以支持负载均衡等场景
         String scheme = request.getHeader("X-Forwarded-Scheme");
         // 如果请求头中未提供方案，则使用请求直接提供的方案
@@ -141,6 +141,11 @@ public class IPUtils {
 
         // 返回构造的基础URL
         return getString(request, scheme, serverName);
+    }
+
+    public static String getBaseUrl() {
+        // 返回构造的基础URL
+        return getBaseUrl(ThreadUtil.getRequest());
     }
 
     private static String getString(HttpServletRequest request, String scheme, String serverName) {
