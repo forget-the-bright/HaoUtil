@@ -611,20 +611,33 @@ public class CompilerUtil {
             // 继续向上查找父类加载器
             contextClassLoader = contextClassLoader.getParent();
         }
+        String osName = System.getProperty("os.name").toLowerCase();
+        String filePrifix = "";
+        String jarFilePrifix = "";
+        if (osName.startsWith("win")) {
+            filePrifix = "file:/";
+            jarFilePrifix = "jar:file:/";
+        } else {
+            filePrifix = "file:";
+            jarFilePrifix = "jar:file:";
+        }
+
 
         // 将类加载器条目转换为实际路径，并进行标准化处理
+        String finalFilePrifix = filePrifix;
+        String finalJarFilePrifix = jarFilePrifix;
         TreeSet<String> baseUrls = jars.stream().map(loader -> {
             // 使用反射获取每个 loader 的 base 字段，即原始路径字符串
             String baseUrl = Convert.toStr(ReflectUtil.getFieldValue(loader, "base"));
 
             // 处理不同协议的路径格式：
-            if (StrUtil.startWith(baseUrl, "file:/")) {
+            if (StrUtil.startWith(baseUrl, finalFilePrifix)) {
                 // 去除 file:/ 协议前缀，转换为标准文件路径
-                return StrUtil.replace(baseUrl, "file:/", "");
+                return StrUtil.replace(baseUrl, finalFilePrifix, "");
             }
-            if (StrUtil.startWith(baseUrl, "jar:file:/")) {
+            if (StrUtil.startWith(baseUrl, finalJarFilePrifix)) {
                 // 去除 jar:file:/ 前缀，并将 .jar!/ 替换为 .jar，得到可识别的 JAR 路径
-                String replace = StrUtil.replace(baseUrl, "jar:file:/", "");
+                String replace = StrUtil.replace(baseUrl, finalJarFilePrifix, "");
                 return StrUtil.replace(replace, ".jar!/", ".jar");
             }
             // 默认返回原始路径（适用于未知协议或已处理过的路径）
