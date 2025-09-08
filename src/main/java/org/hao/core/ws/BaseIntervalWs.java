@@ -9,6 +9,7 @@ import org.hao.core.Maps;
 import org.hao.vo.Tuple;
 
 import javax.websocket.Session;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -375,6 +376,18 @@ public abstract class BaseIntervalWs {
                     WSUtil.sendMessage(session, message);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    String asyncSendMessageError = "The remote endpoint was in state [TEXT_FULL_WRITING] which is an invalid state for called method";
+                    if (e.getMessage().contains(asyncSendMessageError)) {
+                        // 出现异步发送消息错误问题情况,上一个没发送完，下一个又去发送的情况
+                        System.out.println("出现异步发送消息错误问题情况,上一个没发送完，下一个又去发送的情况");
+                        try {
+                            //如果发送失败，失败会话直接关闭比较好
+                            session.close();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+
                     //如果发送失败，代表可能上一次还没有传输完成等情况。 在此发送也不会成功，不考虑再次发送
                     //WSUtil.sendMessage(session, e.getMessage());
                 }

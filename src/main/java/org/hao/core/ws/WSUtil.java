@@ -294,7 +294,7 @@ public class WSUtil {
                 String asyncSendMessageError = "The remote endpoint was in state [TEXT_FULL_WRITING] which is an invalid state for called method";
                 if (errorMessage.contains(asyncSendMessageError)) {
                     //todo 出现异步发送消息错误问题情况,上一个没发送完，下一个又去发送的情况
-
+                    System.out.println("出现异步发送消息错误问题情况,上一个没发送完，下一个又去发送的情况");
                 }
                 throw exception;
             } finally {
