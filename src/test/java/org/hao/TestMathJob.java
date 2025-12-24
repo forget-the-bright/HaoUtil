@@ -3,7 +3,11 @@ package org.hao;
 import lombok.extern.slf4j.Slf4j;
 import org.hao.core.ip.IPUtils;
 import org.hao.core.math.CopperMassCalculator;
+import org.hao.core.math.ProcessVarSineGenerator;
+import org.hao.core.print.PrintUtil;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO
@@ -13,6 +17,20 @@ import org.junit.jupiter.api.Test;
  */
 @Slf4j
 public class TestMathJob {
+    @Test
+    public void testSineMath() throws Exception {
+        for (int i = 0; i < 100; i++) {
+            ProcessVarSineGenerator processVarSineGenerator = new ProcessVarSineGenerator(180);
+
+            double sineValue = processVarSineGenerator
+                    .computeSineValue(100, 70, 1, System.currentTimeMillis());
+
+            PrintUtil.RED.Println("max 100 min 70 CurrentSinVal: {}", sineValue);
+
+            TimeUnit.SECONDS.sleep(1);
+        }
+    }
+
     @Test
     public void testMath() throws Exception {
         String localIP = IPUtils.getLocalIP();
