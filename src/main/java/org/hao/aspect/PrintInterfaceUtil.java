@@ -25,15 +25,19 @@ import java.util.TimeZone;
 public class PrintInterfaceUtil {
     //private static Logger logger = LoggerFactory.getLogger(PrintInterfaceUtil.class);
 
-    public static void executeBefore(String className, String methodName, String value,Class<?> aClass) {
+    public static void executeBefore(String className, String methodName, String value, Class<?> aClass) {
         Logger logger = LoggerFactory.getLogger(aClass);
         // 接收到请求，记录请求内容
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        String requestURI = request.getRequestURI();
-        String userName = IPUtils.getIpAddr(request);
+        HttpServletRequest request = null;
+        String requestURI = "本地请求";
+        String userName = "local_system";
+        if (attributes != null && (request = attributes.getRequest()) != null) {
+            requestURI = request.getRequestURI();
+            userName = IPUtils.getIpAddr(request);
+        }
         System.out.println();
-        String printImprotMethod = "==================  进入  " + className + ":方法:" + methodName + value + "URL: "+requestURI+"=====================================";
+        String printImprotMethod = "==================  进入  " + className + ":方法:" + methodName + value + "URL: " + requestURI + "=====================================";
         //PrintUtil.BLUE.Println(printImprotMethod);
         logger.info(PrintUtil.BLUE.getColorStr(printImprotMethod));
         String zhanwei = StrUtil.repeat('=', (int) Math.ceil(printImprotMethod.length() / 3));
@@ -46,7 +50,7 @@ public class PrintInterfaceUtil {
     }
 
 
-    public static void executeAfter(long startTime, String className, String methodName, String value,Boolean flag,Exception error,Class<?> aClass) {
+    public static void executeAfter(long startTime, String className, String methodName, String value, Boolean flag, Exception error, Class<?> aClass) {
         Logger logger = LoggerFactory.getLogger(aClass);
         //方法执行完成后台操作
         long endTime = System.currentTimeMillis(); //获取结束时间
@@ -62,15 +66,15 @@ public class PrintInterfaceUtil {
                 + minute + "分钟,"
                 + second + "秒,共" + interval + "毫秒"
         );*/
-        if(flag){
-            logger.error(PrintUtil.RED.getColorStr("错误信息: "+error.getMessage()),error);
+        if (flag) {
+            logger.error(PrintUtil.RED.getColorStr("错误信息: " + error.getMessage()), error);
         }
         logger.info(PrintUtil.RED.getColorStr(className + "类的方法:" + methodName + value + "执行时间： " + hour + "小时,"
                 + minute + "分钟,"
                 + second + "秒,共" + interval + "毫秒"
         ));
         //PrintUtil.BLUE.Println("===================================================  方法执行完毕  ===================================================");
-        logger.info(PrintUtil.BLUE.getColorStr("=======================================================  方法执行"+(flag?"失败":"成功")+"  ======================================================="));
+        logger.info(PrintUtil.BLUE.getColorStr("=======================================================  方法执行" + (flag ? "失败" : "成功") + "  ======================================================="));
         System.out.println();
 
     }

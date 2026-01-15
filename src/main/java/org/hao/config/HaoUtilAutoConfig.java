@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Import;
 @Configuration // 表示该类是一个配置类
 @EnableConfigurationProperties({HaoUtilProperties.class}) // 该注解的作用是为 xxxProperties 开启属性配置功能，并将这个类以组件的形式注入到容器中
 @ConditionalOnProperty(prefix = "hao-util", value = "enabled", havingValue = "true") // 当指定的配置项等于你想要的时候，配置类生效
-@Import({SpringUtil.class})//PrintAspect.class
+@Import({SpringUtil.class, JetCacheConfig.class})//PrintAspect.class
 public class HaoUtilAutoConfig {
     @Autowired
     private HaoUtilProperties haoUtilProperties;
@@ -66,5 +66,10 @@ public class HaoUtilAutoConfig {
     @ConditionalOnProperty(prefix = "hao-util", value = "enable-failsafe", havingValue = "true")
     public FailSafeAspect failSafeAspect() {
         return new FailSafeAspect();
+    }
+
+    @Bean
+    public RateLimitAspect rateLimitAspect() {
+        return new RateLimitAspect();
     }
 }

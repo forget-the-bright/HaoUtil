@@ -17,6 +17,7 @@ public class HaoUtilProperties {
     private boolean printInterface;
     private boolean enableWs = false;
     private boolean enableFailsafe = false;
+    private boolean enableJetcache = false;
     //通常建议根据你的服务器核心数设置
     private int wsSchedulerPoolSize = Runtime.getRuntime().availableProcessors() * 2;
 
@@ -58,5 +59,13 @@ public class HaoUtilProperties {
 
     public void setEnableFailsafe(boolean enableFailsafe) {
         this.enableFailsafe = enableFailsafe;
+    }
+
+    public boolean isEnableJetcache() {
+        return enableJetcache;
+    }
+
+    public void setEnableJetcache(boolean enableJetcache) {
+        this.enableJetcache = enableJetcache;
     }
 }

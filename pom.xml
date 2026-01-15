@@ -6,7 +6,7 @@
 
     <groupId>io.github.forget-the-bright</groupId>
     <artifactId>HaoUtil</artifactId>
-    <version>1.0.16.4</version>
+    <version>1.0.16.7</version>
     <!--20250530 mvn中央仓库要求包括项目名称属性。不然无法发布-->
     <name>HaoUtil</name>
 
@@ -26,6 +26,9 @@
         <failsafe.version>3.3.2</failsafe.version>
         <mybatis-plus.version>3.5.8</mybatis-plus.version>
         <commons-math3.version>3.6.1</commons-math3.version>
+        <guava.version>32.1.3-jre</guava.version>
+        <jetcache.version>2.7.8</jetcache.version>
+        <kryo5.version>5.6.2</kryo5.version>
     </properties>
     <description>简单的复用项目中常用的工具</description>
     <url>https://github.com/forget-the-bright/HaoUtil</url>
@@ -126,6 +129,26 @@
                 <artifactId>commons-math3</artifactId>
                 <version>${commons-math3.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alicp.jetcache</groupId>
+                <artifactId>jetcache-starter-redis-springdata</artifactId>
+                <version>${jetcache.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.esotericsoftware.kryo</groupId>
+                <artifactId>kryo5</artifactId>
+                <version>${kryo5.version}</version>
+                <scope>compile</scope>
+            </dependency>
             <!-- JUnit 5 -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -146,7 +169,7 @@
     </dependencyManagement>
     <!--使用 optional 标记的依赖不会被传递到使用该库的项目中。换句话说，当其他项目引入这个库时，Maven 不会自动引入这个可选依赖。-->
     <!--    scope 标记
-    provided: 表示该依赖在编译和测试时是可用的，但在运行时不包含在最终的 JAR 文件中。一般用于 Servlet API 或其他在容器中提供的库。
+    provided: 表示该依赖在编译和测试时是可用的，但在运行时不包含在最终的 JAR 文件中。而且，provided 标记的依赖不会被传递引用 一般用于 Servlet API 或其他在容器中提供的库。
 
     runtime: 表示该依赖在编译时不可用，但在运行时可用，适用于那些只在运行时需要的依赖。
     import: 不实际包含依赖: 使用  import作用域并不会将这些依赖实际添加到你的项目中，而是使得该 BOM 文件中定义的依赖版本可用于后续定义依赖。
@@ -181,11 +204,33 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alicp.jetcache</groupId>
+            <artifactId>jetcache-starter-redis-springdata</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.esotericsoftware.kryo</groupId>
+            <artifactId>kryo5</artifactId>
+        </dependency>
         <!--表达式解析库-->
         <dependency>
             <groupId>org.mvel</groupId>

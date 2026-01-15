@@ -41,10 +41,10 @@ public class SpringRunUtil {
 
 
     public static void runAfter(Class<?> primarySource, String[] args, Consumer<ConfigurableApplicationContext> consumer) {
+        startUpClass = primarySource;
         ConfigurableApplicationContext application = SpringApplication.run(primarySource, args);
         consumer.accept(application);
         printRunInfo();
-        startUpClass = primarySource;
     }
 
     public static void runAfter(Class<?> primarySource, String[] args) {
