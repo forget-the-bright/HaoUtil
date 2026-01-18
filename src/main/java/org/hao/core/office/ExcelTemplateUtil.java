@@ -68,6 +68,15 @@ public class ExcelTemplateUtil {
         return renderTemplateToBytesBySheetTag(templatePath, data, 0);
     }
 
+    /**
+     * 根据模板和多工作表数据渲染Excel字节数组
+     *
+     * @param templatePath    模板路径
+     * @param data           包含每个工作表名称和对应数据的映射
+     * @param templateSheetTag 模板工作表标识（可以是索引或名称）
+     * @return 渲染后的Excel字节数组
+     * @throws IOException IO异常
+     */
     private static byte[] renderTemplateMuiltSheetToBytesBySheetTag(String templatePath, Map<String, Map<String, Object>> data, Object templateSheetTag) throws IOException {
         // 1. 从 classpath 读取模板（只读）
         InputStream inputByClassPath = getInputByClassPath(templatePath);
@@ -79,19 +88,32 @@ public class ExcelTemplateUtil {
         } else {
             sheet = workbook.getSheet(templateSheetTag.toString());
         }
-        Integer index = 0;
+        
+        // 遍历数据，为每个数据项创建一个新的工作表
+        int index = 0;
         for (Map.Entry<String, Map<String, Object>> entry : data.entrySet()) {
             String sheetName = entry.getKey();
             Map<String, Object> value = entry.getValue();
-            Sheet sheetEmpty = workbook.createSheet(sheetName);
-            copySheet(workbook, sheet, sheetEmpty);
-            // 先处理所有行，收集需要扩展的列表信息
-            processSheet(sheetEmpty, value);
+            
+            // 创建新工作表并复制模板内容
+            Sheet newSheet = workbook.createSheet(sheetName);
+            copySheet(workbook, sheet, newSheet);
+            
+            // 处理新工作表中的数据
+            processSheet(newSheet, value);
+            
+            // 设置工作表顺序
             workbook.setSheetOrder(sheetName, index);
+            index++;
         }
+        
+        // 设置第一个工作表为活动工作表
         workbook.setActiveSheet(0);
+        
+        // 移除原始模板工作表
         int sheetIndex = workbook.getSheetIndex(sheet);
         workbook.removeSheetAt(sheetIndex);
+        
         // 3. 写入 ByteArrayOutputStream
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             workbook.write(out);
@@ -169,10 +191,16 @@ public class ExcelTemplateUtil {
     }
 
     /**
-     * 处理列表数据并插入新行
+     * 处理列表数据并插入新行，仅对包含列表表达式的列进行扩展
+     *
+     * @param sheet            工作表
+     * @param templateRow      模板行
+     * @param data             数据映射
+     * @param originalRowIndex 原始行索引
      */
     private static void processListInRow(Sheet sheet, Row templateRow, Map<String, Object> data, int originalRowIndex) {
         // 收集所有列表占位符及其对应的列表数据
+        List<Integer> listColumns = new ArrayList<>(); // 记录包含列表标记的列索引
         List<ListInfo> listInfos = collectListInfos(templateRow, data);
 
         if (listInfos.isEmpty()) {
@@ -198,12 +226,23 @@ public class ExcelTemplateUtil {
             return;
         }
 
-        // 保存原始列的模板
-        String[] cellTemplates = new String[templateRow.getLastCellNum()];
+        // 找出包含列表标记的列
         for (int i = 0; i < templateRow.getLastCellNum(); i++) {
             Cell cell = templateRow.getCell(i);
             if (cell != null && cell.getCellType() == CellType.STRING) {
-                cellTemplates[i] = cell.getStringCellValue();
+                String cellValue = cell.getStringCellValue();
+                if (containsListPlaceholder(cellValue)) {
+                    listColumns.add(i);
+                }
+            }
+        }
+
+        // 保存原始列的模板（仅保存包含列表标记的列）
+        Map<Integer, String> cellTemplates = new HashMap<>();
+        for (Integer colIndex : listColumns) {
+            Cell cell = templateRow.getCell(colIndex);
+            if (cell != null && cell.getCellType() == CellType.STRING) {
+                cellTemplates.put(colIndex, cell.getStringCellValue());
             }
         }
 
@@ -211,27 +250,156 @@ public class ExcelTemplateUtil {
         int rowsToAdd = maxListSize - 1; // 原行已经占用了一行，所以只需要新增 maxListSize - 1 行
 
         if (rowsToAdd > 0) {
-            // 向下移动后续行，为列表数据腾出空间
-            shiftRowsDown(sheet, originalRowIndex + 1, rowsToAdd);
+            // 只对包含列表标记的列及以下的行进行向下移动
+            shiftSpecificColumnsDown(sheet, originalRowIndex, listColumns, rowsToAdd);
         }
 
-        // 创建新行并填充数据
-        for (int i = 0; i < maxListSize; i++) {
-            Row newRow = sheet.getRow(originalRowIndex + i);
+        // 在原始行之后创建新行并填充列表数据（仅填充包含列表标记的列）
+        for (int i = 1; i < maxListSize; i++) { // 从1开始，因为第0行是原始模板行
+            int newRowIdx = originalRowIndex + i;
+            Row newRow = sheet.getRow(newRowIdx);
             if (newRow == null) {
-                newRow = sheet.createRow(originalRowIndex + i);
+                newRow = sheet.createRow(newRowIdx);
             }
 
-            for (int j = 0; j < cellTemplates.length; j++) {
-                if (cellTemplates[j] != null) {
-                    Cell newCell = newRow.getCell(j);
+            for (Integer colIndex : listColumns) {
+                String cellTemplate = cellTemplates.get(colIndex);
+                if (cellTemplate != null) {
+                    Cell newCell = newRow.getCell(colIndex);
                     if (newCell == null) {
-                        newCell = newRow.createCell(j);
+                        newCell = newRow.createCell(colIndex);
+                    }
+
+                    // 从模板行复制样式
+                    Cell templateCell = templateRow.getCell(colIndex);
+                    if (templateCell != null && templateCell.getCellStyle() != null) {
+                        newCell.setCellStyle(templateCell.getCellStyle());
                     }
 
                     // 替换列表项的占位符
-                    String cellContent = replaceListPlaceholders(cellTemplates[j], listInfos, i);
+                    String cellContent = replaceListPlaceholders(cellTemplate, listInfos, i);
                     newCell.setCellValue(cellContent);
+                }
+            }
+        }
+
+        // 对于原始模板行，更新包含列表标记的列的值
+        for (Integer colIndex : listColumns) {
+            String cellTemplate = cellTemplates.get(colIndex);
+            if (cellTemplate != null) {
+                Cell cell = templateRow.getCell(colIndex);
+                if (cell == null) {
+                    cell = templateRow.createCell(colIndex);
+                }
+
+                // 从模板行复制样式
+                Cell templateCell = templateRow.getCell(colIndex);
+                if (templateCell != null && templateCell.getCellStyle() != null) {
+                    cell.setCellStyle(templateCell.getCellStyle());
+                }
+
+                // 替换列表项的占位符（使用第一个数据项）
+                String cellContent = replaceListPlaceholders(cellTemplate, listInfos, 0);
+                cell.setCellValue(cellContent);
+            }
+        }
+    }
+
+    /**
+     * 只移动特定列下方的连续单元格，避免移动无关行导致内容重复
+     * 仅移动从起始行下方开始的包含指定列的连续行
+     *
+     * @param sheet         工作表
+     * @param startRow      起始行索引（列表表达式所在行）
+     * @param columnsToShift 需要移动的列索引列表
+     * @param rowsToAdd     需要增加的行数
+     */
+    private static void shiftSpecificColumnsDown(Sheet sheet, int startRow, List<Integer> columnsToShift, int rowsToAdd) {
+        int lastRowNum = sheet.getLastRowNum();
+
+        // 计算需要移动的连续行数：从startRow+1开始，直到遇到一个完全不包含指定列的行或到达最后一行
+        int rowsToMove = 0;
+        for (int i = startRow + 1; i <= lastRowNum; i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) {
+                break; // 遇到空行则停止
+            }
+            
+            boolean hasRelevantColumn = false;
+            for (Integer colIndex : columnsToShift) {
+                if (row.getCell(colIndex) != null) {
+                    hasRelevantColumn = true;
+                    break;
+                }
+            }
+            
+            if (!hasRelevantColumn) {
+                // 如果当前行没有要移动的列，则停止计算
+                break;
+            }
+            
+            rowsToMove++;
+        }
+
+        // 从最下面需要移动的行开始向上移动，避免覆盖
+        for (int i = startRow + rowsToMove; i >= startRow + 1; i--) {
+            Row sourceRow = sheet.getRow(i);
+            if (sourceRow != null) {
+                // 创建目标行
+                Row targetRow = sheet.getRow(i + rowsToAdd);
+                if (targetRow == null) {
+                    targetRow = sheet.createRow(i + rowsToAdd);
+                }
+
+                // 只移动指定的列
+                for (Integer colIndex : columnsToShift) {
+                    Cell sourceCell = sourceRow.getCell(colIndex);
+                    if (sourceCell != null) {
+                        Cell targetCell = targetRow.createCell(colIndex);
+
+                        // 复制单元格值
+                        switch (sourceCell.getCellType()) {
+                            case STRING:
+                                targetCell.setCellValue(sourceCell.getStringCellValue());
+                                break;
+                            case NUMERIC:
+                                if (DateUtil.isCellDateFormatted(sourceCell)) {
+                                    targetCell.setCellValue(sourceCell.getDateCellValue());
+                                } else {
+                                    targetCell.setCellValue(sourceCell.getNumericCellValue());
+                                }
+                                break;
+                            case BOOLEAN:
+                                targetCell.setCellValue(sourceCell.getBooleanCellValue());
+                                break;
+                            case FORMULA:
+                                targetCell.setCellFormula(sourceCell.getCellFormula());
+                                break;
+                            case BLANK:
+                                // 留空
+                                break;
+                            case ERROR:
+                                targetCell.setCellErrorValue(sourceCell.getErrorCellValue());
+                                break;
+                            default:
+                                break;
+                        }
+
+                        // 复制单元格样式
+                        if (sourceCell.getCellStyle() != null) {
+                            targetCell.setCellStyle(sourceCell.getCellStyle());
+                        }
+
+                        // 复制单元格注释（如果存在）
+                        if (sourceCell.getCellComment() != null) {
+                            targetCell.setCellComment(sourceCell.getCellComment());
+                        }
+
+                        // 复制单元格超链接（如果存在）
+                        if (sourceCell.getHyperlink() != null) {
+                            targetCell.setHyperlink(sourceCell.getHyperlink());
+                        }
+                    }
                 }
             }
         }

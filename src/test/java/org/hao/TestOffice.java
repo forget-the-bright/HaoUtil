@@ -3,6 +3,7 @@ package org.hao;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.RandomUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hao.core.Maps;
@@ -32,17 +33,17 @@ public class TestOffice {
                 Maps.put("list", ListUtil.of(
                         Maps.asMap(
                                 Maps.put("name", "张三"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(10, 5, 0, System.currentTimeMillis())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(10, 5, 0, System.currentTimeMillis()- RandomUtil.randomInt())),
                                 Maps.put("sex", "男")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "李四"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(19, 10, 0, System.currentTimeMillis())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(19, 10, 0, System.currentTimeMillis()- RandomUtil.randomInt())),
                                 Maps.put("sex", "女")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "王五"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(29, 19, 0, System.currentTimeMillis())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(29, 19, 0, System.currentTimeMillis()- RandomUtil.randomInt())),
                                 Maps.put("sex", "男")
                         )
                 ))
@@ -53,13 +54,17 @@ public class TestOffice {
     @Test
     @SneakyThrows
     public void testExcelTemplateMutil() {
+        String currentUser = System.getProperty("user.name");
         Map<String, Object> data1s = getDatas();
         Map<String, Object> data2s = getDatas();
+        data1s.put("list2",data2s.get("list"));
+        data2s.put("list2",data1s.get("list"));
         Map<String, Map<String, Object>> mutilDatas = Maps.asMap(LinkedHashMap.class,
                 Maps.put("data1", data1s),
                 Maps.put("data2", data2s));
         byte[] bytes = ExcelTemplateUtil.renderTemplateMuiltSheetToBytes("template/testTemplate.xlsx", mutilDatas);
-        String filePath = StrUtil.format("C:\\Users\\61778\\Desktop\\exportExcelMutil_{}.xlsx",
+        String filePath = StrUtil.format("C:\\Users\\{}\\Desktop\\exportExcelMutil_{}.xlsx",
+                currentUser,
                 DateUtil.format(new Date(), "yyyyMMddHHmmss")); // 支持相对或绝对路径
 
         // 一行代码写入文件
@@ -71,9 +76,11 @@ public class TestOffice {
     @Test
     @SneakyThrows
     public void testExcelTemplate() {
+        String currentUser = System.getProperty("user.name");
         Map<String, Object> datas = getDatas();
         byte[] bytes = ExcelTemplateUtil.renderTemplateToBytes("template/testTemplate.xlsx", datas);
-        String filePath = StrUtil.format("C:\\Users\\61778\\Desktop\\exportExcel_{}.xlsx",
+        String filePath = StrUtil.format("C:\\Users\\{}\\Desktop\\exportExcel_{}.xlsx",
+                currentUser,
                 DateUtil.format(new Date(), "yyyyMMddHHmmss")); // 支持相对或绝对路径
 
         // 一行代码写入文件
