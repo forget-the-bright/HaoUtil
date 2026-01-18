@@ -557,6 +557,78 @@ hao-util:
 
 ---
 
+### 16. **JetCache 缓存支持**
+
+
+- [JetCache项目文档](https://github.com/alibaba/jetcache/blob/master/docs/CN/Readme.md)
+- [JetCache使用文档](https://gitee.com/vip55/jetcache/wikis/pages)
+
+
+#### 功能描述：
+- 集成 Alibaba JetCache 缓存框架，支持 Redis 缓存存储
+- 提供自动化缓存配置，支持方法级缓存和创建缓存注解
+- 使用 Kryo5 序列化器，提升序列化性能
+- 支持缓存统计和监控
+
+#### 配置启用：
+```yaml
+hao-util:
+  enable-jetcache: true  # 启用 JetCache 支持
+```
+
+#### 示例：
+```java
+
+@Cached(
+		name = "Slag:querySlagFaultNumStats:", //名称前戳
+		key = "#startTime.getTime()+'_'+#endTime.getTime()+'_'+#deviceType", // 缓存key 可以用SPEL表达式
+		expire = 30,               // 最大存活 30 s
+		timeUnit = TimeUnit.SECONDS, // 缓存时间单位
+		cacheType = CacheType.REMOTE //  Redis
+
+)
+@CacheRefresh( // 缓存刷新 和 @Cached 组合使用可以实现 滑动刷新
+		refresh = 30, // 间隔多长时间刷新一次缓存
+		timeUnit = TimeUnit.SECONDS, // 缓存时间单位
+		stopRefreshAfterLastAccess = 60 //指定该key多长时间没有访问就停止刷新，如果不指定会一直刷新。
+)
+public String getData(String key) {
+    return "cached data";
+}
+```
+
+### 17. **限流功能 - RateLimit**
+
+#### 功能描述：
+- 基于 Guava RateLimiter 实现的 QPS 限流功能
+- 支持方法级别限流注解
+- 提供多租户限流器，支持不同用户的独立限流控制
+- 通过 AOP 切面实现透明化的限流处理
+
+#### 示例：
+```java
+@RateLimit(qps = 5.0)  // 每秒最多5个请求
+@GetMapping("/api/data")
+public String getData() {
+    return "data";
+}
+
+// 多租户限流示例
+MultiTenantRateLimiter rateLimiter = new MultiTenantRateLimiter();
+rateLimiter.setRate("user123", 2.0);  // 为用户设置限流速率
+boolean allowed = rateLimiter.tryAcquire("user123");  // 尝试获取访问许可
+```
+
+
+#### 特性：
+- ✅ **方法级限流**：通过 `@RateLimit` 注解轻松实现接口限流
+- ✅ **QPS 控制**：可精确控制每秒请求数量
+- ✅ **多租户支持**：不同用户独立的限流策略
+- ✅ **系统保护**：超出限流阈值时返回友好提示
+
+---
+
+
 ## 📦 总线架构图（简略）
 
 ```
