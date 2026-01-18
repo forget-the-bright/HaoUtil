@@ -9,6 +9,7 @@ import com.alicp.jetcache.anno.config.EnableMethodCache;
 import com.alicp.jetcache.anno.support.GlobalCacheConfig;
 import com.alicp.jetcache.anno.support.SpringConfigProvider;
 import com.alicp.jetcache.autoconfigure.AutoConfigureBeans;
+import com.alicp.jetcache.embedded.CaffeineCacheBuilder;
 import com.alicp.jetcache.redis.springdata.RedisSpringDataCacheBuilder;
 import com.alicp.jetcache.support.*;
 import org.hao.annotation.EnableAutoMethodCache;
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * TODO
  *
- * @author wanghao(helloworlwh@163.com)
+ * @author wanghao(helloworlwh @ 163.com)
  * @since 2026/1/14 16:02
  */
 @Configuration
@@ -56,14 +57,24 @@ public class JetCacheConfig {
                         .valueEncoder(Kryo5ValueEncoder.INSTANCE)
                         .valueDecoder(Kryo5ValueDecoder.INSTANCE)
                         .expireAfterWrite(300, TimeUnit.SECONDS); // 默认 TTL
+        // 4. 构建本地缓存（Caffeine）
+        CaffeineCacheBuilder localBuilder = CaffeineCacheBuilder.createCaffeineCacheBuilder()
+                .limit(100) // 最大缓存条目数
+                .keyConvertor(FastjsonKeyConvertor.INSTANCE)
+                .expireAfterWrite(300, TimeUnit.SECONDS);  // 写入后过期时间
 
         // 2. 注册到 default area
         Map<String, CacheBuilder> remoteBuilders = new HashMap<>();
         remoteBuilders.put(CacheConsts.DEFAULT_AREA, remoteBuilder);
         autoConfigureBeans.setRemoteCacheBuilders(remoteBuilders);
+        // 5. 注册本地缓存构建器到 default area
+        Map<String, CacheBuilder> localBuilders = new HashMap<>();
+        localBuilders.put(CacheConsts.DEFAULT_AREA, localBuilder);
+        autoConfigureBeans.setLocalCacheBuilders(localBuilders);
         // 3. 创建全局配置（必须设置 ConfigProvider！）
         // GlobalCacheConfig config = new GlobalCacheConfig();
         globalCacheConfig.setRemoteCacheBuilders(remoteBuilders);
+        globalCacheConfig.setLocalCacheBuilders(localBuilders);
         globalCacheConfig.setStatIntervalMinutes(15);
         globalCacheConfig.setAreaInCacheName(false);
 

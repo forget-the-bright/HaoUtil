@@ -57,7 +57,7 @@ public class HutoolPlus {
         response.setContentType(getContentTypeForExtension(fileName));
     }
 
-    private static String getContentTypeForExtension(String fileName) {
+    public static String getContentTypeForExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
         String fileExtension = "";
         if (dotIndex != -1 && dotIndex < fileName.length() - 1) {

@@ -59,6 +59,10 @@ public class TestOffice {
         Map<String, Object> data2s = getDatas();
         data1s.put("list2",data2s.get("list"));
         data2s.put("list2",data1s.get("list"));
+       // data1s.remove("list");
+        //data2s.remove("list");
+       // data1s.remove("list2");
+       // data2s.remove("list2");
         Map<String, Map<String, Object>> mutilDatas = Maps.asMap(LinkedHashMap.class,
                 Maps.put("data1", data1s),
                 Maps.put("data2", data2s));

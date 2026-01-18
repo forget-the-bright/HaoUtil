@@ -1,10 +1,14 @@
 package org.hao.core.office;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.*;
+import org.hao.core.HutoolPlus;
+import org.hao.vo.ExcelTemplateListInfo;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -20,13 +24,13 @@ import java.util.regex.Pattern;
 /**
  * Excel模板导出工具类 - 支持嵌套列表数据导出，修复列表导出覆盖问题
  *
- * @author wanghao(helloworlwh@163.com)
+ * @author wanghao(helloworlwh @ 163.com)
  * @since 2026/1/6 13:10
  */
 public class ExcelTemplateUtil {
     private static byte[] renderTemplateToBytesBySheetTag(String templatePath, Map<String, Object> data, Object sheetTag) throws IOException {
         // 1. 从 classpath 读取模板（只读）
-        InputStream inputByClassPath = getInputByClassPath(templatePath);
+        InputStream inputByClassPath = HutoolPlus.getInputByClassPath(templatePath);
         ExcelReader reader = ExcelUtil.getReader(inputByClassPath);
         Workbook workbook = reader.getWorkbook();
         Sheet sheet = null;
@@ -71,15 +75,15 @@ public class ExcelTemplateUtil {
     /**
      * 根据模板和多工作表数据渲染Excel字节数组
      *
-     * @param templatePath    模板路径
-     * @param data           包含每个工作表名称和对应数据的映射
+     * @param templatePath     模板路径
+     * @param data             包含每个工作表名称和对应数据的映射
      * @param templateSheetTag 模板工作表标识（可以是索引或名称）
      * @return 渲染后的Excel字节数组
      * @throws IOException IO异常
      */
     private static byte[] renderTemplateMuiltSheetToBytesBySheetTag(String templatePath, Map<String, Map<String, Object>> data, Object templateSheetTag) throws IOException {
         // 1. 从 classpath 读取模板（只读）
-        InputStream inputByClassPath = getInputByClassPath(templatePath);
+        InputStream inputByClassPath = HutoolPlus.getInputByClassPath(templatePath);
         ExcelReader reader = ExcelUtil.getReader(inputByClassPath);
         Workbook workbook = reader.getWorkbook();
         Sheet sheet = null;
@@ -88,32 +92,32 @@ public class ExcelTemplateUtil {
         } else {
             sheet = workbook.getSheet(templateSheetTag.toString());
         }
-        
+
         // 遍历数据，为每个数据项创建一个新的工作表
         int index = 0;
         for (Map.Entry<String, Map<String, Object>> entry : data.entrySet()) {
             String sheetName = entry.getKey();
             Map<String, Object> value = entry.getValue();
-            
+
             // 创建新工作表并复制模板内容
             Sheet newSheet = workbook.createSheet(sheetName);
             copySheet(workbook, sheet, newSheet);
-            
+
             // 处理新工作表中的数据
             processSheet(newSheet, value);
-            
+
             // 设置工作表顺序
             workbook.setSheetOrder(sheetName, index);
             index++;
         }
-        
+
         // 设置第一个工作表为活动工作表
         workbook.setActiveSheet(0);
-        
+
         // 移除原始模板工作表
         int sheetIndex = workbook.getSheetIndex(sheet);
         workbook.removeSheetAt(sheetIndex);
-        
+
         // 3. 写入 ByteArrayOutputStream
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             workbook.write(out);
@@ -201,22 +205,15 @@ public class ExcelTemplateUtil {
     private static void processListInRow(Sheet sheet, Row templateRow, Map<String, Object> data, int originalRowIndex) {
         // 收集所有列表占位符及其对应的列表数据
         List<Integer> listColumns = new ArrayList<>(); // 记录包含列表标记的列索引
-        List<ListInfo> listInfos = collectListInfos(templateRow, data);
+        List<ExcelTemplateListInfo> listInfos = collectListInfos(templateRow, data);
 
         if (listInfos.isEmpty()) {
-            // 如果没有列表标记，只做普通替换
-            for (Cell cell : templateRow) {
-                if (cell == null || cell.getCellType() != CellType.STRING) continue;
-
-                String cellValue = cell.getStringCellValue();
-                cell.setCellValue(replacePlaceholders(cellValue, data));
-            }
             return;
         }
 
         // 获取最长的列表长度，用于确定需要创建多少行
         int maxListSize = 0;
-        for (ListInfo listInfo : listInfos) {
+        for (ExcelTemplateListInfo listInfo : listInfos) {
             maxListSize = Math.max(maxListSize, listInfo.listData.size());
         }
 
@@ -309,10 +306,10 @@ public class ExcelTemplateUtil {
      * 只移动特定列下方的连续单元格，避免移动无关行导致内容重复
      * 仅移动从起始行下方开始的包含指定列的连续行
      *
-     * @param sheet         工作表
-     * @param startRow      起始行索引（列表表达式所在行）
+     * @param sheet          工作表
+     * @param startRow       起始行索引（列表表达式所在行）
      * @param columnsToShift 需要移动的列索引列表
-     * @param rowsToAdd     需要增加的行数
+     * @param rowsToAdd      需要增加的行数
      */
     private static void shiftSpecificColumnsDown(Sheet sheet, int startRow, List<Integer> columnsToShift, int rowsToAdd) {
         int lastRowNum = sheet.getLastRowNum();
@@ -324,7 +321,7 @@ public class ExcelTemplateUtil {
             if (row == null) {
                 break; // 遇到空行则停止
             }
-            
+
             boolean hasRelevantColumn = false;
             for (Integer colIndex : columnsToShift) {
                 if (row.getCell(colIndex) != null) {
@@ -332,12 +329,12 @@ public class ExcelTemplateUtil {
                     break;
                 }
             }
-            
+
             if (!hasRelevantColumn) {
                 // 如果当前行没有要移动的列，则停止计算
                 break;
             }
-            
+
             rowsToMove++;
         }
 
@@ -406,82 +403,10 @@ public class ExcelTemplateUtil {
     }
 
     /**
-     * 向下移动指定范围内的行
-     */
-    private static void shiftRowsDown(Sheet sheet, int startRow, int rowsToAdd) {
-        int lastRowNum = sheet.getLastRowNum();
-
-        // 从最后一行开始向上移动，避免覆盖
-        for (int i = lastRowNum; i >= startRow; i--) {
-            Row sourceRow = sheet.getRow(i);
-            if (sourceRow != null) {
-                Row newRow = sheet.createRow(i + rowsToAdd);
-
-                // 复制单元格内容
-                for (int j = 0; j < sourceRow.getLastCellNum(); j++) {
-                    Cell sourceCell = sourceRow.getCell(j);
-                    if (sourceCell != null) {
-                        Cell newCell = newRow.createCell(j);
-
-                        // 复制单元格值
-                        switch (sourceCell.getCellType()) {
-                            case STRING:
-                                newCell.setCellValue(sourceCell.getStringCellValue());
-                                break;
-                            case NUMERIC:
-                                if (DateUtil.isCellDateFormatted(sourceCell)) {
-                                    newCell.setCellValue(sourceCell.getDateCellValue());
-                                } else {
-                                    newCell.setCellValue(sourceCell.getNumericCellValue());
-                                }
-                                break;
-                            case BOOLEAN:
-                                newCell.setCellValue(sourceCell.getBooleanCellValue());
-                                break;
-                            case FORMULA:
-                                newCell.setCellFormula(sourceCell.getCellFormula());
-                                break;
-                            case BLANK:
-                                // 留空
-                                break;
-                            case ERROR:
-                                newCell.setCellErrorValue(sourceCell.getErrorCellValue());
-                                break;
-                            default:
-                                break;
-                        }
-
-                        // 复制单元格样式
-                        if (sourceCell.getCellStyle() != null) {
-                            newCell.setCellStyle(sourceCell.getCellStyle());
-                        }
-
-                        // 复制单元格注释（如果存在）
-                        if (sourceCell.getCellComment() != null) {
-                            newCell.setCellComment(sourceCell.getCellComment());
-                        }
-
-                        // 复制单元格超链接（如果存在）
-                        if (sourceCell.getHyperlink() != null) {
-                            newCell.setHyperlink(sourceCell.getHyperlink());
-                        }
-                    }
-                }
-
-                // 复制行高
-                newRow.setHeight(sourceRow.getHeight());
-
-                // 删除原来的行
-                sheet.removeRow(sourceRow);
-            }
-        }
-    }
-
-    /**
      * 收集行中的列表信息
      */
-    private static List<ListInfo> collectListInfos(Row row, Map<String, Object> data) {
-        List<ListInfo> listInfos = new ArrayList<>();
+    private static List<ExcelTemplateListInfo> collectListInfos(Row row, Map<String, Object> data) {
+        List<ExcelTemplateListInfo> listInfos = new ArrayList<>();
         Set<String> processedKeys = new HashSet<>();
 
         for (Cell cell : row) {
@@ -502,12 +427,12 @@ public class ExcelTemplateUtil {
 
                         if (listObj instanceof List) {
                             List<Map<String, Object>> listData = convertToListOfMaps((List<?>) listObj);
-                            listInfos.add(new ListInfo(listName, listData));
+                            listInfos.add(new ExcelTemplateListInfo(listName, listData));
                             processedKeys.add(listName);
                         } else {
                             // 如果不是列表，创建一个包含null元素的列表以保持一致性
                             List<Map<String, Object>> emptyList = Collections.singletonList(null);
-                            listInfos.add(new ListInfo(listName, emptyList));
+                            listInfos.add(new ExcelTemplateListInfo(listName, emptyList));
                             processedKeys.add(listName);
                         }
                     }
@@ -530,38 +455,13 @@ public class ExcelTemplateUtil {
                 result.add((Map<String, Object>) obj);
             } else {
                 // 尝试通过反射获取对象属性
-                Map<String, Object> map = objectToMap(obj);
+                Map<String, Object> map = BeanUtil.beanToMap(obj);
+                //Map<String, Object> map = objectToMap(obj);
                 result.add(map);
             }
         }
 
         return result;
-    }
-
-    /**
-     * 将对象转换为Map
-     */
-    private static Map<String, Object> objectToMap(Object obj) {
-        Map<String, Object> map = new HashMap<>();
-
-        if (obj == null) {
-            return map;
-        }
-
-        Class<?> clazz = obj.getClass();
-        Field[] fields = clazz.getDeclaredFields();
-
-        for (Field field : fields) {
-            field.setAccessible(true);
-            try {
-                Object value = field.get(obj);
-                map.put(field.getName(), value);
-            } catch (IllegalAccessException e) {
-                // 忽略无法访问的字段
-            }
-        }
-
-        return map;
     }
 
     /**
@@ -574,10 +474,10 @@ public class ExcelTemplateUtil {
     /**
      * 替换列表项中的占位符
      */
-    private static String replaceListPlaceholders(String template, List<ListInfo> listInfos, int index) {
+    private static String replaceListPlaceholders(String template, List<ExcelTemplateListInfo> listInfos, int index) {
         String result = template;
 
-        for (ListInfo listInfo : listInfos) {
+        for (ExcelTemplateListInfo listInfo : listInfos) {
             Pattern pattern = Pattern.compile("#\\{" + Pattern.quote(listInfo.listName) + "\\.([^}]+)}");
             Matcher matcher = pattern.matcher(result);
             StringBuffer sb = new StringBuffer();
@@ -586,20 +486,14 @@ public class ExcelTemplateUtil {
                 String property = matcher.group(1);
 
                 // 获取当前索引位置的对象
-                Object obj = index < listInfo.listData.size() ? listInfo.listData.get(index) : null;
+                Map<String, Object> obj = index < listInfo.listData.size() ? listInfo.listData.get(index) : null;
 
                 String replacement = "";
                 if (obj != null) {
                     // 从Map中获取属性值
-                    if (obj instanceof Map) {
-                        Map<String, Object> map = (Map<String, Object>) obj;
-                        Object value = map.get(property);
-                        replacement = (value != null) ? value.toString() : "";
-                    } else {
-                        // 尝试通过反射获取属性值
-                        Object value = getPropertyValue(obj, property);
-                        replacement = (value != null) ? value.toString() : "";
-                    }
+                    Map<String, Object> map = obj;
+                    Object value = map.get(property);
+                    replacement = (value != null) ? value.toString() : "";
                 }
 
                 matcher.appendReplacement(sb, replacement);
@@ -609,40 +503,9 @@ public class ExcelTemplateUtil {
         }
 
         // 最后处理普通占位符
-        return replaceSimplePlaceholders(result, new HashMap<>()); // 传入空的数据map，因为此时不应有普通占位符
+        return result;
     }
 
-    /**
-     * 通过反射获取对象属性值
-     */
-    private static Object getPropertyValue(Object obj, String propertyName) {
-        if (obj == null) return null;
-
-        Class<?> clazz = obj.getClass();
-        try {
-            Field field = clazz.getDeclaredField(propertyName);
-            field.setAccessible(true);
-            return field.get(obj);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            // 尝试获取getter方法
-            try {
-                String getterName = "get" + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
-                java.lang.reflect.Method method = clazz.getMethod(getterName);
-                return method.invoke(obj);
-            } catch (Exception ex) {
-                return null;
-            }
-        }
-    }
-
-    /**
-     * 替换简单的占位符（不涉及列表）
-     */
-    private static String replaceSimplePlaceholders(String template, Map<String, Object> data) {
-        // 不做任何替换，因为列表数据处理完后不应该再有普通占位符
-        // 如果确实有，可以保留原逻辑
-        return template;
-    }
 
     /**
      * 替换单元格中的 ${key} 占位符和 #{listName.property} 列表标记
@@ -664,155 +527,7 @@ public class ExcelTemplateUtil {
         matcher.appendTail(sb);
         result = sb.toString();
 
-        // 替换列表标记（如果没有实际列表数据，则清空）
-        Pattern listPattern = Pattern.compile("#\\{([^}]+)\\.([^}]+)}");
-        Matcher listMatcher = listPattern.matcher(result);
-        sb = new StringBuffer();
-
-        while (listMatcher.find()) {
-            String listKey = listMatcher.group(1).trim();
-            String property = listMatcher.group(2).trim();
-
-            Object listObj = data.get(listKey);
-            String replacement = "";
-
-            if (listObj instanceof List) {
-                List<?> list = (List<?>) listObj;
-                if (!list.isEmpty()) {
-                    Object firstItem = list.get(0);
-                    if (firstItem instanceof Map) {
-                        Map<String, Object> map = (Map<String, Object>) firstItem;
-                        Object value = map.get(property);
-                        replacement = (value != null) ? value.toString() : "";
-                    } else {
-                        Object value = getPropertyValue(firstItem, property);
-                        replacement = (value != null) ? value.toString() : "";
-                    }
-                }
-            }
-
-            listMatcher.appendReplacement(sb, replacement);
-        }
-        listMatcher.appendTail(sb);
-
-        return sb.toString();
-    }
-
-    public static InputStream getInputByClassPath(String path) {
-        // 使用当前线程的上下文类加载器获取资源文件的输入流
-        return Thread.currentThread()
-                .getContextClassLoader()
-                .getResourceAsStream(path);
-    }
-
-    @SneakyThrows
-    public static void download(HttpServletResponse response, byte[] excelBytes, String fileName) {
-        // 设置Content-Disposition响应头，用于指定文件名，文件名使用UTF-8编码以支持中文
-        response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(fileName, "UTF-8"));
-        // 设置响应的内容类型，指定为Excel格式，同时设置字符集为utf-8
-        response.setContentType(getContentTypeForExtension(fileName));
-        response.setContentLength(excelBytes.length);
-        // 获取响应的输出流，用于向客户端发送Excel数据
-        ServletOutputStream outputStream = response.getOutputStream();
-        outputStream.write(excelBytes);
-        outputStream.flush(); // 确保数据全部写出
-        IoUtil.close(outputStream);
-    }
-
-    private static String getContentTypeForExtension(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        String fileExtension = "";
-        if (dotIndex != -1 && dotIndex < fileName.length() - 1) {
-            fileExtension = fileName.substring(dotIndex + 1);
-        }
-        switch (fileExtension) {
-            case "txt":
-                return "text/plain";
-            case "html":
-                return "text/html";
-            case "css":
-                return "text/css";
-            case "js":
-                return "text/javascript";
-            case "json":
-                return "application/json";
-            case "xml":
-                return "application/xml";
-            case "pdf":
-                return "application/pdf";
-            case "jpg":
-            case "jpeg":
-                return "image/jpeg";
-            case "png":
-                return "image/png";
-            case "gif":
-                return "image/gif";
-            case "bmp":
-                return "image/bmp";
-            case "svg":
-                return "image/svg+xml";
-            case "ico":
-                return "image/x-icon";
-            case "mp3":
-                return "audio/mpeg";
-            case "wav":
-                return "audio/wav";
-            case "ogg":
-                return "audio/ogg";
-            case "flac":
-                return "audio/flac";
-            case "aac":
-                return "audio/aac";
-            case "mp4":
-                return "video/mp4";
-            case "avi":
-                return "video/avi";
-            case "mkv":
-                return "video/webm";
-            case "mov":
-                return "video/quicktime";
-            case "wmv":
-                return "video/windowsmedia";
-            case "xls":
-                return "application/vnd.ms-excel";
-            case "xlsx":
-                return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8";
-            case "ppt":
-                return "application/vnd.ms-powerpoint";
-            case "pptx":
-                return "application/vnd.openxmlformats-officedocument.presentationml.presentation;charset=utf-8";
-            case "doc":
-                return "application/vnd.ms-word";
-            case "docx":
-                return "application/vnd.openxmlformats-officedocument.wordml.document;charset=utf-8";
-            case "zip":
-                return "application/zip";
-            case "rar":
-                return "application/x-rar-compressed";
-            case "7z":
-                return "application/x-7z-compressed";
-            case "tar":
-                return "application/x-tar";
-            case "gz":
-                return "application/x-gz";
-            case "exe":
-            case "dll":
-            default:
-                return "application/octet-stream";
-        }
-    }
-
-    /**
-     * 列表信息内部类
-     */
-    private static class ListInfo {
-        final String listName;
-        final List<Map<String, Object>> listData;
-
-        ListInfo(String listName, List<Map<String, Object>> listData) {
-            this.listName = listName;
-            this.listData = listData;
-        }
+        return result;
     }
 
 
