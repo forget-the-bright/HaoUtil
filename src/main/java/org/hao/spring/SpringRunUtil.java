@@ -1,7 +1,6 @@
 package org.hao.spring;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import org.hao.core.StrUtil;
 import org.hao.core.ip.IPUtils;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,10 +24,13 @@ import java.util.function.Consumer;
  * @author wanghao (61778@xxx.com)
  * @since 2024/5/28
  */
-
 public class SpringRunUtil {
     private static Logger logger = LoggerFactory.getLogger(SpringRunUtil.class);
     public static Class<?> startUpClass = null;
+
+    /**
+     * 打印工具数组，包含多种颜色的打印工具
+     */
     private static PrintUtil[] printUtils = new PrintUtil[]{
             PrintUtil.RED,
             PrintUtil.GREEN,
@@ -39,7 +40,24 @@ public class SpringRunUtil {
             PrintUtil.CYAN,
     };
 
+    /**
+     * 运行Spring Boot应用并在启动后执行默认逻辑
+     *
+     * @param primarySource 主配置类
+     * @param args          命令行参数
+     */
+    public static void runAfter(Class<?> primarySource, String[] args) {
+        runAfter(primarySource, args, application -> {
+        });
+    }
 
+    /**
+     * 运行Spring Boot应用并在启动后执行自定义逻辑
+     *
+     * @param primarySource 主配置类
+     * @param args          命令行参数
+     * @param consumer      启动后的回调函数，接收ConfigurableApplicationContext参数
+     */
     public static void runAfter(Class<?> primarySource, String[] args, Consumer<ConfigurableApplicationContext> consumer) {
         startUpClass = primarySource;
         ConfigurableApplicationContext application = SpringApplication.run(primarySource, args);
@@ -47,11 +65,9 @@ public class SpringRunUtil {
         printRunInfo();
     }
 
-    public static void runAfter(Class<?> primarySource, String[] args) {
-        runAfter(primarySource, args, application -> {
-        });
-    }
-
+    /**
+     * 打印应用程序运行信息，包括应用名称、本地访问地址和外部IP访问地址
+     */
     public static void printRunInfo() {
         List<String> allIP = IPUtils.allIP;
         String applicationName = SpringUtil.getApplicationName();
@@ -66,7 +82,7 @@ public class SpringRunUtil {
                 .append(StrUtil.formatFast("\tKnif4j:       \thttp://localhost{}{}/doc.html\r\n", port, path))
                 .append(StrUtil.formatFast("\tLocal:        \thttp://localhost{}{}/\r\n", port, path));
 
-
+        // 随机打乱打印工具数组，用于不同IP显示不同颜色
         int allIpSize = allIP.size();
         List<PrintUtil> list = Arrays.asList(printUtils);
         Collections.shuffle(list);

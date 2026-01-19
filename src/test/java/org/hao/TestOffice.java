@@ -33,17 +33,17 @@ public class TestOffice {
                 Maps.put("list", ListUtil.of(
                         Maps.asMap(
                                 Maps.put("name", "张三"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(10, 5, 0, System.currentTimeMillis()- RandomUtil.randomInt())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(10, 5, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
                                 Maps.put("sex", "男")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "李四"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(19, 10, 0, System.currentTimeMillis()- RandomUtil.randomInt())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(19, 10, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
                                 Maps.put("sex", "女")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "王五"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(29, 19, 0, System.currentTimeMillis()- RandomUtil.randomInt())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(29, 19, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
                                 Maps.put("sex", "男")
                         )
                 ))

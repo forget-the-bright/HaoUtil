@@ -5,7 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
- * TODO
+ * 数字工具类，提供数字字符串处理相关功能
  *
  * @author wanghao(helloworlwh @ 163.com)
  * @since 2025/7/7 11:09
@@ -24,7 +24,8 @@ public class NumberTool {
     public static String retainSignificantDecimals(String number, Integer scale) {
         if (ObjectUtil.isEmpty(scale) || scale <= 0) return number; // 如果scale小于等于0，则直接返回原字符串
         if (StrUtil.isEmpty(number) || !NumberUtil.isNumber(number)) return number; // 如果number不是数字，则直接返回原字符串
-        // 将数字转换为字符串（避免科学计数法）
+
+        // 将数字转换为普通字符串格式（避免科学计数法）
         String numberStr = NumberUtil.toBigDecimal(number).toPlainString();
 
         // 分割整数部分和小数部分
@@ -32,6 +33,8 @@ public class NumberTool {
             // 没有小数部分，直接返回原值或补零
             return numberStr; //StrUtil.padAfter("", scale, "0")
         }
+
+        // 分割数字字符串为整数部分和小数部分
         String[] parts = StrUtil.splitToArray(numberStr, '.');
         String integerPart = parts[0];
         String decimalPart = parts[1];
@@ -42,6 +45,7 @@ public class NumberTool {
             return numberStr;
         }
 
+        // 查找第一个非零字符的位置
         int lastSignificantIndex = -1;
 
         for (int i = 0; i < decimalPartLength; i++) {
@@ -59,6 +63,8 @@ public class NumberTool {
         if (subLength > decimalPartLength) {//如果小数部分长度小于截取长度，则直接返回原字符串
             return numberStr;
         }
+
+        // 截取指定长度的小数部分并去除末尾的零
         String resultStr = decimalPart.substring(0, subLength);
         resultStr = StrUtil.trim(resultStr, 1, character -> character == '0');
         return integerPart + "." + resultStr;

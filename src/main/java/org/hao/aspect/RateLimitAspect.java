@@ -5,7 +5,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.hao.annotation.RateLimit;
-import org.hao.core.exception.HaoException;
+import org.hao.core.exception.QbsServiceBusyException;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -40,7 +40,7 @@ public class RateLimitAspect {
         // 如果不存在对应的限流器则创建新的限流器，qps值从注解中获取
         RateLimiter limiter = limiters.computeIfAbsent(key, k -> RateLimiter.create(rateLimit.qps()));
         // 尝试获取令牌，如果获取失败则抛出系统繁忙异常
-        HaoException.throwByFlag(!limiter.tryAcquire(), "系统繁忙,请稍后重试");
+        QbsServiceBusyException.throwIfRequestTooFrequent(!limiter.tryAcquire(), "当前接口Qps请求量为 {} ,目前请求量过大,系统繁忙,请稍后重试", rateLimit.qps());
         // 执行原方法
         return joinPoint.proceed();
     }

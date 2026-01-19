@@ -30,13 +30,23 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * TODO
+ * MyBatis-Plus SQL工具类
+ * 提供数据库表字段操作、事务管理、通用启用方法、父子关系数据处理等通用数据库操作功能
  *
  * @author wanghao(helloworlwh @ 163.com)
  * @since 2025/7/3 14:38
  */
 public class MPSqlUtil {
     //region 数据库表字段相关操作方法
+
+    /**
+     * 获取SQL字段名
+     * 将Lambda表达式转换为对应的数据库字段名（下划线格式）
+     *
+     * @param <T> 实体类型
+     * @param fieldFunction 字段函数式接口，用于指定实体类中的字段
+     * @return 转换后的数据库字段名（下划线格式）
+     */
     public static <T> String getSqlFieldName(SFunction<T, ?> fieldFunction) {
         String methodName = LambdaUtils.extract(fieldFunction).getImplMethodName();
         String fieldName = PropertyNamer.methodToProperty(methodName);
@@ -44,6 +54,14 @@ public class MPSqlUtil {
         return sqlFieldName;
     }
 
+    /**
+     * 获取实体类的主键字段
+     * 通过MyBatis-Plus的TableInfo获取实体类的主键字段信息
+     *
+     * @param <T> 实体类型
+     * @param entityClass 实体类的Class对象
+     * @return 主键字段对象，如果不存在主键则返回null
+     */
     public static <T> Field getId(Class<T> entityClass) {
         // 获取表信息
         TableInfo tableInfo = TableInfoHelper.getTableInfo(entityClass);
@@ -54,6 +72,14 @@ public class MPSqlUtil {
         return null; // 如果没有找到主键，则返回null
     }
 
+    /**
+     * 获取实体类的主键字段名
+     * 通过MyBatis-Plus的TableInfo获取实体类的主键字段名
+     *
+     * @param <T> 实体类型
+     * @param entityClass 实体类的Class对象
+     * @return 主键字段名，如果不存在主键则返回null
+     */
     public static <T> String getSqlId(Class<T> entityClass) {
         // 获取表信息
         TableInfo tableInfo = TableInfoHelper.getTableInfo(entityClass);
@@ -104,13 +130,13 @@ public class MPSqlUtil {
      * 如果存在已启用的子数据，会提示需要先停用这些子数据
      * 最后，它会更新数据库中的数据状态
      *
-     * @param <T>                 实体类的类型
-     * @param entityClass         实体类的Class对象，用于指定操作的实体类型
-     * @param getEnableFunction   用于获取实体启用状态的函数式接口
-     * @param fieldFunction       用于获取实体字段值的函数式接口
+     * @param <T> 实体类的类型
+     * @param entityClass 实体类的Class对象，用于指定操作的实体类型
+     * @param getEnableFunction 用于获取实体启用状态的函数式接口
+     * @param fieldFunction 用于获取实体字段值的函数式接口
      * @param parentFieldFunction 用于获取实体父字段值的函数式接口
-     * @param nameFieldFunction   用于获取实体名称字段值的函数式接口
-     * @param id                  要操作的数据的ID
+     * @param nameFieldFunction 用于获取实体名称字段值的函数式接口
+     * @param id 要操作的数据的ID
      */
     public static <T> void CommonEnable(Class<T> entityClass, SFunction<T, ?> getEnableFunction,
                                         SFunction<T, ?> fieldFunction, SFunction<T, ?> parentFieldFunction,
@@ -171,10 +197,10 @@ public class MPSqlUtil {
      * 该方法用于启用或停用指定实体类的记录
      * 它通过ID获取记录，检查其启用状态，然后更新启用状态
      *
-     * @param <T>               实体类的类型
-     * @param entityClass       实体类的Class对象，用于指定操作的实体类型
+     * @param <T> 实体类的类型
+     * @param entityClass 实体类的Class对象，用于指定操作的实体类型
      * @param getEnableFunction 函数式接口，用于获取实体的启用状态字段
-     * @param id                实体的ID，用于定位要操作的记录
+     * @param id 实体的ID，用于定位要操作的记录
      */
     public static <T> void CommonEnable(Class<T> entityClass,
                                         SFunction<T, ?> getEnableFunction, String id) {
@@ -201,6 +227,14 @@ public class MPSqlUtil {
         updateChainWrapper.update();
     }
 
+    /**
+     * 填充更新链包装器
+     * 为更新操作自动设置更新时间和更新人字段
+     *
+     * @param <T> 实体类型
+     * @param entityClass 实体类的Class对象
+     * @param updateChainWrapper 更新链包装器对象
+     */
     private static <T> void fillUpdateChainWrapper(Class<T> entityClass, UpdateChainWrapper<T> updateChainWrapper) {
         TableInfo tableInfo = TableInfoHelper.getTableInfo(entityClass);
         tableInfo.getFieldList().forEach(item -> {
@@ -219,11 +253,11 @@ public class MPSqlUtil {
     /**
      * 递归查找父子关系的数据
      *
-     * @param <T>                 实体类的类型
-     * @param entityClass         实体类的Class对象，用于指定查询结果映射的类型
-     * @param fieldFunction       函数式接口，用于指定实体类中的字段，通常代表子记录中的外键字段
+     * @param <T> 实体类的类型
+     * @param entityClass 实体类的Class对象，用于指定查询结果映射的类型
+     * @param fieldFunction 函数式接口，用于指定实体类中的字段，通常代表子记录中的外键字段
      * @param parentFieldFunction 函数式接口，用于指定实体类中的字段，通常代表父记录的主键字段
-     * @param value               查询的起始值，通常是一个标识符，如代码或ID
+     * @param value 查询的起始值，通常是一个标识符，如代码或ID
      * @return 返回查询到的父子关系数据列表，类型为T
      * <p>
      * 此方法使用递归SQL查询来获取具有父子关系的数据结构
@@ -265,12 +299,12 @@ public class MPSqlUtil {
     /**
      * 递归填充父级子级数据
      *
-     * @param <T>                 实体类类型
-     * @param entityClass         实体类Class对象
-     * @param fieldFunction       用于获取实体类字段值的函数式接口
+     * @param <T> 实体类类型
+     * @param entityClass 实体类Class对象
+     * @param fieldFunction 用于获取实体类字段值的函数式接口
      * @param parentFieldFunction 用于获取父级字段值的函数式接口
-     * @param childsFunction      用于设置实体类子级列表的双消费者接口
-     * @param rootParentValue     根父级值，用于筛选父级数据
+     * @param childsFunction 用于设置实体类子级列表的双消费者接口
+     * @param rootParentValue 根父级值，用于筛选父级数据
      * @return 返回填充完子级数据的父级实体列表
      */
     public static <T> List<T> fillParentChildDataRecursively(Class<T> entityClass,
@@ -281,12 +315,11 @@ public class MPSqlUtil {
         return fillParentChildDataRecursively(list, fieldFunction, parentFieldFunction, childsFunction, rootParentValue);
     }
 
-    /*
+    /**
      * 递归填充父级子级数据
      *
      * @param <T> 实体类类型
      * @param list 数据集合
-     * @param childGroups 子级数据分组
      * @param fieldFunction 用于获取主键字段值的函数式接口
      * @param parentFieldFunction 用于获取父级字段值的函数式接口
      * @param childsFunction 用于设置实体类子级列表的双消费者接口
@@ -333,11 +366,11 @@ public class MPSqlUtil {
      * 它会根据父对象的某个属性值，从提供的子对象映射中查找对应的子对象集合，并通过BiConsumer将子对象集合设置到父对象中
      * 这个过程会递归地进行，以处理可能的多级嵌套结构
      *
-     * @param parent         要填充子数据的父对象
-     * @param childGroups    子对象的映射，键是子对象中的某个属性值，值是具有相同该属性值的子对象列表
-     * @param fieldFunction  函数式接口，用于从父对象中获取用于查找子对象集合的键值
+     * @param parent 要填充子数据的父对象
+     * @param childGroups 子对象的映射，键是子对象中的某个属性值，值是具有相同该属性值的子对象列表
+     * @param fieldFunction 函数式接口，用于从父对象中获取用于查找子对象集合的键值
      * @param childsFunction 消费者接口，用于将子对象集合设置到父对象中
-     * @param <T>            对象类型
+     * @param <T> 对象类型
      */
     public static <T> void fillParentChildData(T parent, Map<?, List<T>> childGroups,
                                                Function<T, ?> fieldFunction, BiConsumer<T, List<T>> childsFunction) {

@@ -5,7 +5,6 @@ import com.alicp.jetcache.CacheBuilder;
 import com.alicp.jetcache.SimpleCacheManager;
 import com.alicp.jetcache.anno.CacheConsts;
 import com.alicp.jetcache.anno.config.EnableCreateCacheAnnotation;
-import com.alicp.jetcache.anno.config.EnableMethodCache;
 import com.alicp.jetcache.anno.support.GlobalCacheConfig;
 import com.alicp.jetcache.anno.support.SpringConfigProvider;
 import com.alicp.jetcache.autoconfigure.AutoConfigureBeans;
@@ -15,7 +14,6 @@ import com.alicp.jetcache.support.*;
 import org.hao.annotation.EnableAutoMethodCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
@@ -25,7 +23,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * TODO
+ * JetCache配置类，用于配置Redis远程缓存和Caffeine本地缓存
+ * 支持方法级缓存注解和创建缓存注解功能
  *
  * @author wanghao(helloworlwh @ 163.com)
  * @since 2026/1/14 16:02
@@ -47,40 +46,52 @@ public class JetCacheConfig {
     @Autowired
     private SimpleCacheManager cacheManager;
 
+    /**
+     * 配置缓存构建器，初始化远程Redis缓存和本地Caffeine缓存
+     * 设置默认的序列化方式、过期时间和缓存限制等参数
+     */
     @PostConstruct
     public void configureCache() {
-        // 1. 构建远程缓存（关键：使用 SpringDataRedisCacheBuilder）
+
+        // 构建Redis远程缓存构建器，配置连接工厂、序列化方式和过期时间
         RedisSpringDataCacheBuilder remoteBuilder =
                 RedisSpringDataCacheBuilder.createBuilder()
                         .connectionFactory(redisConnectionFactory) // ← 注入连接工厂
-                        .keyConvertor(FastjsonKeyConvertor.INSTANCE)
-                        .valueEncoder(Kryo5ValueEncoder.INSTANCE)
-                        .valueDecoder(Kryo5ValueDecoder.INSTANCE)
+                        .keyConvertor(Fastjson2KeyConvertor.INSTANCE)
+                        .valueEncoder(Fastjson2ValueEncoder.INSTANCE)
+                        .valueDecoder(Fastjson2ValueDecoder.INSTANCE)
                         .expireAfterWrite(300, TimeUnit.SECONDS); // 默认 TTL
-        // 4. 构建本地缓存（Caffeine）
+
+        // 构建Caffeine本地缓存构建器，配置最大缓存数量和过期时间
         CaffeineCacheBuilder localBuilder = CaffeineCacheBuilder.createCaffeineCacheBuilder()
                 .limit(100) // 最大缓存条目数
                 .keyConvertor(FastjsonKeyConvertor.INSTANCE)
                 .expireAfterWrite(300, TimeUnit.SECONDS);  // 写入后过期时间
 
-        // 2. 注册到 default area
+
         Map<String, CacheBuilder> remoteBuilders = new HashMap<>();
         remoteBuilders.put(CacheConsts.DEFAULT_AREA, remoteBuilder);
         autoConfigureBeans.setRemoteCacheBuilders(remoteBuilders);
-        // 5. 注册本地缓存构建器到 default area
+
         Map<String, CacheBuilder> localBuilders = new HashMap<>();
         localBuilders.put(CacheConsts.DEFAULT_AREA, localBuilder);
         autoConfigureBeans.setLocalCacheBuilders(localBuilders);
-        // 3. 创建全局配置（必须设置 ConfigProvider！）
+
         // GlobalCacheConfig config = new GlobalCacheConfig();
         globalCacheConfig.setRemoteCacheBuilders(remoteBuilders);
         globalCacheConfig.setLocalCacheBuilders(localBuilders);
         globalCacheConfig.setStatIntervalMinutes(15);
         globalCacheConfig.setAreaInCacheName(false);
 
-        ReflectUtil.invoke(cp,"doInit");
+        // 通过反射调用SpringConfigProvider的初始化方法
+        ReflectUtil.invoke(cp, "doInit");
         //cp.init();
         cacheManager.setCacheBuilderTemplate(cp.getCacheBuilderTemplate());
+
+
+        DecoderMap decoderMap = DecoderMap.defaultInstance();
+        // 设置fastjson2的解码器
+        decoderMap.register(-153049663, Fastjson2ValueDecoder.INSTANCE);
         // return config;
     }
 }
