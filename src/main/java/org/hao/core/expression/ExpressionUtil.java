@@ -5,7 +5,8 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
-import org.hao.core.HutoolPlus;
+import org.hao.core.FileUtils;
+import org.hao.core.exception.ExceptionUtils;
 import org.hao.core.Maps;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
@@ -64,7 +65,7 @@ public class ExpressionUtil {
      * @return 从类路径中读取模板文件并返回内容
      */
     private static String initTemplate() {
-        InputStream inputByClassPath = HutoolPlus.getInputByClassPath("META-INF/rulesTemplate.js");
+        InputStream inputByClassPath = FileUtils.getInputByClassPath("META-INF/rulesTemplate.js");
         return IoUtil.read(inputByClassPath, StandardCharsets.UTF_8);
     }
 

@@ -30,21 +30,25 @@ public class TestOffice {
                 Maps.put("name", "姓名"),
                 Maps.put("age", "年龄"),
                 Maps.put("sex", "性别"),
+                Maps.put("express", "函数表达式"),
                 Maps.put("list", ListUtil.of(
                         Maps.asMap(
                                 Maps.put("name", "张三"),
                                 Maps.put("age", processVarSineGenerator.computeSineValue(10, 5, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
-                                Maps.put("sex", "男")
+                                Maps.put("sex", "男"),
+                                Maps.put("express", "=(B2+0)*10")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "李四"),
                                 Maps.put("age", processVarSineGenerator.computeSineValue(19, 10, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
-                                Maps.put("sex", "女")
+                                Maps.put("sex", "女"),
+                                Maps.put("express", "=(B3+0)*10")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "王五"),
                                 Maps.put("age", processVarSineGenerator.computeSineValue(29, 19, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
-                                Maps.put("sex", "男")
+                                Maps.put("sex", "男"),
+                                Maps.put("express", "=(B4+0)*10")
                         )
                 ))
         );

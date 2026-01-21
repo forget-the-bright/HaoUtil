@@ -1,10 +1,11 @@
 package org.hao.core.office;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import org.apache.poi.ss.usermodel.*;
-import org.hao.core.HutoolPlus;
+import org.hao.core.FileUtils;
 import org.hao.vo.ExcelTemplateListInfo;
 
 import java.io.ByteArrayOutputStream;
@@ -23,9 +24,10 @@ import java.util.regex.Pattern;
 public class ExcelTemplateUtil {
     private static byte[] renderTemplateToBytesBySheetTag(String templatePath, Map<String, Object> data, Object sheetTag) throws IOException {
         // 1. 从 classpath 读取模板（只读）
-        InputStream inputByClassPath = HutoolPlus.getInputByClassPath(templatePath);
+        InputStream inputByClassPath = FileUtils.getInputByClassPath(templatePath);
         ExcelReader reader = ExcelUtil.getReader(inputByClassPath);
         Workbook workbook = reader.getWorkbook();
+        workbook.setForceFormulaRecalculation(true);
         Sheet sheet = null;
         if (sheetTag instanceof Number) {
             sheet = workbook.getSheetAt((Integer) sheetTag);
@@ -76,9 +78,10 @@ public class ExcelTemplateUtil {
      */
     private static byte[] renderTemplateMuiltSheetToBytesBySheetTag(String templatePath, Map<String, Map<String, Object>> data, Object templateSheetTag) throws IOException {
         // 1. 从 classpath 读取模板（只读）
-        InputStream inputByClassPath = HutoolPlus.getInputByClassPath(templatePath);
+        InputStream inputByClassPath = FileUtils.getInputByClassPath(templatePath);
         ExcelReader reader = ExcelUtil.getReader(inputByClassPath);
         Workbook workbook = reader.getWorkbook();
+        workbook.setForceFormulaRecalculation(true);
         Sheet sheet = null;
         if (templateSheetTag instanceof Number) {
             sheet = workbook.getSheetAt((Integer) templateSheetTag);
@@ -182,7 +185,12 @@ public class ExcelTemplateUtil {
 
                 // 替换所有 ${key} 为 data 中的值
                 String replaced = replacePlaceholders(cellValue, data);
-                cell.setCellValue(replaced);
+
+                if (StrUtil.isNotEmpty(replaced) && replaced.trim().substring(0, 1).equals("=")) {
+                    cell.setCellFormula(replaced.trim().substring(1));
+                }else {
+                    cell.setCellValue(replaced);
+                }
             }
         }
     }
@@ -268,7 +276,11 @@ public class ExcelTemplateUtil {
 
                     // 替换列表项的占位符
                     String cellContent = replaceListPlaceholders(cellTemplate, listInfos, i);
-                    newCell.setCellValue(cellContent);
+                    if (StrUtil.isNotEmpty(cellContent) && cellContent.trim().substring(0, 1).equals("=")) {
+                        newCell.setCellFormula(cellContent.trim().substring(1));
+                    }else {
+                        newCell.setCellValue(cellContent);
+                    }
                 }
             }
         }
@@ -290,7 +302,11 @@ public class ExcelTemplateUtil {
 
                 // 替换列表项的占位符（使用第一个数据项）
                 String cellContent = replaceListPlaceholders(cellTemplate, listInfos, 0);
-                cell.setCellValue(cellContent);
+                if (StrUtil.isNotEmpty(cellContent) && cellContent.trim().substring(0, 1).equals("=")) {
+                    cell.setCellFormula(cellContent.trim().substring(1));
+                }else {
+                    cell.setCellValue(cellContent);
+                }
             }
         }
     }
