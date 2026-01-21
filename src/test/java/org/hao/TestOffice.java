@@ -10,6 +10,7 @@ import org.hao.core.Maps;
 import org.hao.core.StrUtil;
 import org.hao.core.math.ProcessVarSineGenerator;
 import org.hao.core.office.ExcelTemplateUtil;
+import org.hao.core.office.WordTemplateUtil;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
@@ -34,19 +35,19 @@ public class TestOffice {
                 Maps.put("list", ListUtil.of(
                         Maps.asMap(
                                 Maps.put("name", "张三"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(10, 5, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(10, 5, 0, System.currentTimeMillis() + RandomUtil.randomInt())),
                                 Maps.put("sex", "男"),
                                 Maps.put("express", "=(B2+0)*10")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "李四"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(19, 10, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(19, 10, 0, System.currentTimeMillis() + RandomUtil.randomInt())),
                                 Maps.put("sex", "女"),
                                 Maps.put("express", "=(B3+0)*10")
                         ),
                         Maps.asMap(
                                 Maps.put("name", "王五"),
-                                Maps.put("age", processVarSineGenerator.computeSineValue(29, 19, 0, System.currentTimeMillis()+ RandomUtil.randomInt())),
+                                Maps.put("age", processVarSineGenerator.computeSineValue(29, 19, 0, System.currentTimeMillis() + RandomUtil.randomInt())),
                                 Maps.put("sex", "男"),
                                 Maps.put("express", "=(B4+0)*10")
                         )
@@ -61,16 +62,16 @@ public class TestOffice {
         String currentUser = System.getProperty("user.name");
         Map<String, Object> data1s = getDatas();
         Map<String, Object> data2s = getDatas();
-        data1s.put("list2",data2s.get("list"));
-        data2s.put("list2",data1s.get("list"));
-       // data1s.remove("list");
+        data1s.put("list2", data2s.get("list"));
+        data2s.put("list2", data1s.get("list"));
+        // data1s.remove("list");
         //data2s.remove("list");
-       // data1s.remove("list2");
-       // data2s.remove("list2");
+        // data1s.remove("list2");
+        // data2s.remove("list2");
         Map<String, Map<String, Object>> mutilDatas = Maps.asMap(LinkedHashMap.class,
                 Maps.put("data1", data1s),
                 Maps.put("data2", data2s));
-        byte[] bytes = ExcelTemplateUtil.renderTemplateMuiltSheetToBytes("template/testTemplate.xlsx", mutilDatas);
+        byte[] bytes = ExcelTemplateUtil.renderTemplateMuiltSheetToBytes("template/testTemplateExcel.xlsx", mutilDatas);
         String filePath = StrUtil.format("C:\\Users\\{}\\Desktop\\exportExcelMutil_{}.xlsx",
                 currentUser,
                 DateUtil.format(new Date(), "yyyyMMddHHmmss")); // 支持相对或绝对路径
@@ -86,7 +87,7 @@ public class TestOffice {
     public void testExcelTemplate() {
         String currentUser = System.getProperty("user.name");
         Map<String, Object> datas = getDatas();
-        byte[] bytes = ExcelTemplateUtil.renderTemplateToBytes("template/testTemplate.xlsx", datas);
+        byte[] bytes = ExcelTemplateUtil.renderTemplateToBytes("template/testTemplateExcel.xlsx", datas);
         String filePath = StrUtil.format("C:\\Users\\{}\\Desktop\\exportExcel_{}.xlsx",
                 currentUser,
                 DateUtil.format(new Date(), "yyyyMMddHHmmss")); // 支持相对或绝对路径
@@ -94,6 +95,23 @@ public class TestOffice {
         // 一行代码写入文件
         FileUtil.writeBytes(bytes, filePath);
 
+        System.out.println("文件已成功导出到: " + filePath);
+    }
+
+
+    @Test
+    @SneakyThrows
+    public void testWordTemplate() {
+        String currentUser = System.getProperty("user.name");
+        Map<String, Object> datas = getDatas();
+        Map<String, Object> datas2 = getDatas();
+        datas.put("list2", datas2.get("list"));
+        String filePath = StrUtil.format("C:\\Users\\{}\\Desktop\\exportWord_{}.docx",
+                currentUser,
+                DateUtil.format(new Date(), "yyyyMMddHHmmss"));
+        WordTemplateUtil.processTemplate("template/testTemplateWord.docx",
+                filePath,
+                datas);
         System.out.println("文件已成功导出到: " + filePath);
     }
 }
