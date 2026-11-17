@@ -7,10 +7,7 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.*;
 import org.hao.core.FileUtils;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTShd;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTc;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -31,9 +28,13 @@ import java.util.regex.Pattern;
 public class WordTemplateUtil {
 
     // 正则表达式
+    //普通文本替换：${key}
     private static final Pattern TEXT_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
+    //列表循环：#{list.key}
     private static final Pattern LIST_PLACEHOLDER_PATTERN = Pattern.compile("#\\{([^}]+)\\}");
+    //图片插入：![key]
     private static final Pattern IMG_PLACEHOLDER_PATTERN = Pattern.compile("!\\[([^\\]]+)\\]");
+    //条件判断：@{condition?true_value:false_value}
     private static final Pattern CONDITIONAL_PLACEHOLDER_PATTERN = Pattern.compile("@\\{([^}]+)\\}");
 
     /**
@@ -196,7 +197,7 @@ public class WordTemplateUtil {
 
                 // 清空新单元格内容
                 List<XWPFParagraph> paragraphs = newCell.getParagraphs();
-                for (int p = paragraphs.size() - 1; p >= 0;p--) {
+                for (int p = paragraphs.size() - 1; p >= 0; p--) {
                     newCell.removeParagraph(p);
                 }
 
@@ -409,7 +410,7 @@ public class WordTemplateUtil {
     }
 
     /**
-     * 复制运行样式（安全版）
+     * 复制运行样式（增强版）
      */
     private static void copyRunStyle(XWPFRun sourceRun, XWPFRun targetRun) {
         if (sourceRun == null || targetRun == null) {
@@ -433,17 +434,39 @@ public class WordTemplateUtil {
         targetRun.setItalic(sourceRun.isItalic());
         targetRun.setStrike(sourceRun.isStrikeThrough());
 
-        // 下划线（关键修复点）
+        // 下划线
         UnderlinePatterns underline = sourceRun.getUnderline();
-
         if (underline != null) {
             targetRun.setUnderline(underline);
-        } // 否则保持默认（无下划线）
+        }
 
-        // 文字颜色
+        // 文字颜色 - 增强处理
         String color = sourceRun.getColor();
+
+        // 如果直接获取为null，尝试从CTRunPr中获取颜色
+        if (color == null || color.isEmpty() || "auto".equalsIgnoreCase(color)) {
+            try {
+                CTRPr rpr = sourceRun.getCTR().getRPr();
+                if (rpr != null && rpr.isSetColor()) {
+                    CTColor ctColor = rpr.getColor();
+                    if (ctColor != null) {
+                        String xmlColor = ctColor.getVal().toString();
+                        if (xmlColor != null && !xmlColor.isEmpty()) {
+                            color = xmlColor;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // 忽略异常，保持默认颜色
+            }
+        }
+
+        // 设置颜色（如果获取到有效颜色）
         if (color != null && !color.isEmpty() && !"auto".equalsIgnoreCase(color)) {
             targetRun.setColor(color);
+        } else {
+            // 如果没有明确颜色，清除目标样式的颜色以使用默认值
+            //targetRun.setColor(null);
         }
 
         // 字符间距（单位： twentieths of a point）
@@ -464,9 +487,19 @@ public class WordTemplateUtil {
         }
     }
 
+
     /**
      * 插入图片到文档
+     *
+     * @param document    文档对象
+     * @param run         运行对象
+     * @param imageStream 图片输入流
+     * @param width       图片宽度
+     * @param height      图片高度
+     * @throws InvalidFormatException 无效的格式异常
+     * @throws IOException            IO异常
      */
+
     public static void insertImage(XWPFDocument document, XWPFRun run, InputStream imageStream,
                                    int width, int height) throws InvalidFormatException, IOException {
         run.addPicture(imageStream, Document.PICTURE_TYPE_JPEG, "image",

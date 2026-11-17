@@ -19,6 +19,13 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 public class TestStringFormat {
     @Test
+    public void test6() {
+        PrintUtil.RED.Println("hello world", BackColorSytle.BRIGHT_CYAN, FontSytle.BOLD);
+        ColorText.printRainbow("helloworld");
+        ColorText.printRainbow("helloworld",true);
+        SpringRunUtil.printRunInfo();
+    }
+    @Test
     public void test5() {
         PrintUtil.RED.Println("hello world", BackColorSytle.BRIGHT_CYAN, FontSytle.BOLD);
         ColorText.Builder()

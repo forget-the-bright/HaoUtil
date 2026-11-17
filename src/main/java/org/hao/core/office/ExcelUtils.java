@@ -1,9 +1,12 @@
 package org.hao.core.office;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import cn.hutool.poi.excel.style.StyleUtil;
 import org.apache.poi.ss.usermodel.*;
+import org.hao.core.FileUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -91,12 +94,12 @@ public class ExcelUtils {
     /**
      * 设置Excel表格中指定区域的单元格样式
      *
-     * @param writer ExcelWriter对象，用于访问和操作Excel文件
-     * @param style CellStyle对象，定义了要应用到单元格的样式
-     * @param beginRow 起始行号，指定样式应用的开始行
-     * @param endRow 结束行号，指定样式应用的结束行
+     * @param writer      ExcelWriter对象，用于访问和操作Excel文件
+     * @param style       CellStyle对象，定义了要应用到单元格的样式
+     * @param beginRow    起始行号，指定样式应用的开始行
+     * @param endRow      结束行号，指定样式应用的结束行
      * @param beginColumn 起始列号，指定样式应用的开始列
-     * @param endColumn 结束列号，指定样式应用的结束列
+     * @param endColumn   结束列号，指定样式应用的结束列
      * @throws RuntimeException 如果结束行小于起始行或结束列小于起始列，则抛出运行时异常
      */
     public static void setStyle(ExcelWriter writer, CellStyle style, int beginRow, int endRow, int beginColumn, int endColumn) {
@@ -187,13 +190,16 @@ public class ExcelUtils {
         // Step.3 AutoPoi 导出Excel
         // 通过工具类创建writer，默认创建xls格式
         ExcelWriter writer = ExcelUtil.getWriter(true);
+        if (hashMaps.size() == 0) return writer;
         //自定义标题别名
         tableHeader.forEach((k, v) -> {
             writer.addHeaderAlias(k, v);
         });
         // 合并单元格后的标题行，使用默认标题样式
-
-        writer.merge(tableHeader.size() - 1, title);
+        Map<String, Object> defaultRaw = hashMaps.get(0);
+        if (StrUtil.isNotEmpty(title)) {
+            writer.merge(defaultRaw.size() - 1, title);
+        }
         Font font = writer.createFont();
         font.setBold(true);
         font.setColor(Font.COLOR_NORMAL);
@@ -202,7 +208,7 @@ public class ExcelUtils {
         writer.getHeadCellStyle().setFont(font);
         // 一次性写出内容，使用默认样式，强制输出标题
         writer.write(hashMaps, true);
-        setSizeColumn(writer.getSheet(), tableHeader.size() - 1);
+        setSizeColumn(writer.getSheet(), defaultRaw.size() - 1);
         StyleUtil.setAlign(writer.getCellStyle(), HorizontalAlignment.LEFT, VerticalAlignment.CENTER);
         /*        writer.getStyleSet().setAlign(HorizontalAlignment.LEFT, VerticalAlignment.CENTER);*/
         //out为OutputStream，需要写出到的目标流
@@ -227,7 +233,7 @@ public class ExcelUtils {
 
     /**
      * 自适应宽度(中文支持)
-     *
+     * <p>
      * 根据sheet中各列的字符串长度，自动调整列宽，以确保中文和英文都能完整显示
      * 此方法旨在解决当单元格内容长度不一时，如何合理设置列宽的问题
      *
@@ -277,6 +283,90 @@ public class ExcelUtils {
             }
 
         }
+    }
+
+
+    /**
+     * 根据多Sheet数据和表头信息创建ExcelWriter对象（无标题版本）
+     * 该方法用于生成包含多个工作表的Excel文件，每个工作表使用相同的表头结构
+     *
+     * @param data        多Sheet数据Map，键为工作表名称，值为该工作表的数据列表
+     *                    每个数据项为一个Map，键为字段名，值为单元格内容
+     * @param tableHeader 表头信息的LinkedHashMap，键为字段名，值为表头显示文本
+     * @return ExcelWriter对象，可用于后续的Excel文件写入或输出操作
+     */
+    public static ExcelWriter renderExcelWriterByMutilSheet(Map<String, List<Map<String, Object>>> data, LinkedHashMap<String, String> tableHeader) {
+        return renderExcelWriterByMutilSheet(data, tableHeader, "");
+    }
+
+    /**
+     * 根据多Sheet数据和表头信息创建ExcelWriter对象（含标题版本）
+     * 该方法用于生成包含多个工作表的Excel文件，支持自定义标题，每个工作表使用相同的表头结构
+     * 会自动删除默认创建的空白工作表，并将第一个数据工作表设置为活动工作表
+     *
+     * @param data        多Sheet数据Map，键为工作表名称，值为该工作表的数据列表
+     *                    每个数据项为一个Map，键为字段名，值为单元格内容
+     * @param tableHeader 表头信息的LinkedHashMap，键为字段名，值为表头显示文本
+     * @param title       Excel表格的标题，如果为空字符串则不显示标题
+     * @return ExcelWriter对象，可用于后续的Excel文件写入或输出操作
+     */
+    public static ExcelWriter renderExcelWriterByMutilSheet(Map<String, List<Map<String, Object>>> data, LinkedHashMap<String, String> tableHeader, String title) {
+        ExcelWriter writer = ExcelUtil.getWriter(true);
+        Workbook workbook = writer.getWorkbook();
+        workbook.setForceFormulaRecalculation(true);
+        Sheet indexSheet = workbook.getSheetAt(0);
+
+        // 遍历所有Sheet数据，为每个Sheet创建工作表并写入数据
+        data.forEach((sheetName, sheetData) -> {
+            writer.setSheet(sheetName);
+            processSheet(writer, sheetData, tableHeader, title);
+        });
+
+        // 删除默认创建的空白工作表
+        int sheetIndex = workbook.getSheetIndex(indexSheet);
+        workbook.removeSheetAt(sheetIndex);
+        // 设置第一个工作表为活动工作表
+        workbook.setActiveSheet(0);
+        return writer;
+    }
+
+    /**
+     * 处理单个Sheet的数据写入和样式设置
+     * 该方法负责为指定的Sheet设置表头、写入数据、调整列宽和设置单元格样式
+     *
+     * @param writer      ExcelWriter对象，用于操作Excel文件
+     * @param data        当前Sheet的数据列表，每个元素为一个Map，键为字段名，值为单元格内容
+     * @param tableHeader 表头信息的LinkedHashMap，键为字段名，值为表头显示文本
+     * @param title       Excel表格的标题，如果为空字符串则不显示标题
+     */
+    private static void processSheet(ExcelWriter writer, List<Map<String, Object>> data, LinkedHashMap<String, String> tableHeader, String title) {
+        if (data == null || data.size() == 0) return;
+
+        // 设置表头别名映射
+        tableHeader.forEach((k, v) -> {
+            writer.addHeaderAlias(k, v);
+        });
+
+        // 获取首行数据用于确定列数，并根据需要合并标题单元格
+        Map<String, Object> defaultRaw = data.get(0);
+        if (StrUtil.isNotEmpty(title)) {
+            writer.merge(defaultRaw.size() - 1, title);
+        }
+
+        // 创建并设置表头字体样式（加粗、正常颜色、斜体）
+        Font font = writer.createFont();
+        font.setBold(true);
+        font.setColor(Font.COLOR_NORMAL);
+        font.setItalic(true);
+        writer.getHeadCellStyle().setFont(font);
+
+        // 一次性写入所有数据，强制输出标题
+        writer.write(data, true);
+
+        // 自动调整列宽以适应内容长度
+        setSizeColumn(writer.getSheet(), defaultRaw.size() - 1);
+        // 设置单元格对齐方式为左对齐、垂直居中
+        StyleUtil.setAlign(writer.getCellStyle(), HorizontalAlignment.LEFT, VerticalAlignment.CENTER);
     }
     //endregion
 }

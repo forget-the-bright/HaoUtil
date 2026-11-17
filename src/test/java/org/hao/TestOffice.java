@@ -4,18 +4,20 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.poi.excel.ExcelWriter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.hao.core.Maps;
 import org.hao.core.StrUtil;
 import org.hao.core.math.ProcessVarSineGenerator;
 import org.hao.core.office.ExcelTemplateUtil;
+import org.hao.core.office.ExcelUtils;
 import org.hao.core.office.WordTemplateUtil;
 import org.junit.jupiter.api.Test;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.ByteArrayOutputStream;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * TODO
@@ -112,6 +114,42 @@ public class TestOffice {
         WordTemplateUtil.processTemplate("template/testTemplateWord.docx",
                 filePath,
                 datas);
+        System.out.println("文件已成功导出到: " + filePath);
+    }
+
+
+    @Test
+    @SneakyThrows
+    public void testMutilExcelTemplate() {
+        String currentUser = System.getProperty("user.name");
+        Map<String, Object> data1s = getDatas();
+        Map<String, Object> data2s = getDatas();
+        Map<String, Object> data3s = getDatas();
+        List<Map<String,Object>> datas1 = (List<Map<String,Object>>)data1s.get("list");
+        List<Map<String,Object>> datas2 = (List<Map<String,Object>>)data2s.get("list");
+        List<Map<String,Object>> datas3 = (List<Map<String,Object>>)data3s.get("list");
+        AtomicInteger i = new AtomicInteger(0);
+        Map<String, List<Map<String,Object>>> data = new LinkedHashMap<>();
+        data.put("name"+i.getAndIncrement(), datas1);
+        data.put("name"+i.getAndIncrement(), datas2);
+        data.put("name"+i.getAndIncrement(), datas3);
+
+
+        ExcelWriter writer = ExcelUtils.renderExcelWriterByMutilSheet(data, new LinkedHashMap<>(), "");
+        byte[] bytes = null;
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            // 将Excel数据写入输出流中，开启自动闭合工作簿
+            writer.flush(outputStream, true);
+            bytes = outputStream.toByteArray();
+        } finally {
+            writer.close();
+        }
+        String filePath = StrUtil.format("C:\\Users\\{}\\Desktop\\exportExcelMutil_{}.xlsx",
+                currentUser,
+                DateUtil.format(new Date(), "yyyyMMddHHmmss")); // 支持相对或绝对路径
+
+        // 一行代码写入文件
+        FileUtil.writeBytes(bytes, filePath);
         System.out.println("文件已成功导出到: " + filePath);
     }
 }

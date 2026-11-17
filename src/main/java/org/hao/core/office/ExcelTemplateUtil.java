@@ -62,6 +62,7 @@ public class ExcelTemplateUtil {
      * @param templatePath 模板路径，如 "templates/report.xlsx"
      * @param data         变量映射，如 {"name": "张三", "age": "25", "items": [{"item": "商品1", "price": 100}, ...]}
      * @return 替换后的 Excel 字节数组
+     * @throws IOException 读取模板时发生IO异常
      */
     public static byte[] renderTemplateToBytes(String templatePath, Map<String, Object> data) throws IOException {
         return renderTemplateToBytesBySheetTag(templatePath, data, 0);
@@ -188,7 +189,7 @@ public class ExcelTemplateUtil {
 
                 if (StrUtil.isNotEmpty(replaced) && replaced.trim().substring(0, 1).equals("=")) {
                     cell.setCellFormula(replaced.trim().substring(1));
-                }else {
+                } else {
                     cell.setCellValue(replaced);
                 }
             }
@@ -278,7 +279,7 @@ public class ExcelTemplateUtil {
                     String cellContent = replaceListPlaceholders(cellTemplate, listInfos, i);
                     if (StrUtil.isNotEmpty(cellContent) && cellContent.trim().substring(0, 1).equals("=")) {
                         newCell.setCellFormula(cellContent.trim().substring(1));
-                    }else {
+                    } else {
                         newCell.setCellValue(cellContent);
                     }
                 }
@@ -304,7 +305,7 @@ public class ExcelTemplateUtil {
                 String cellContent = replaceListPlaceholders(cellTemplate, listInfos, 0);
                 if (StrUtil.isNotEmpty(cellContent) && cellContent.trim().substring(0, 1).equals("=")) {
                     cell.setCellFormula(cellContent.trim().substring(1));
-                }else {
+                } else {
                     cell.setCellValue(cellContent);
                 }
             }
@@ -542,6 +543,11 @@ public class ExcelTemplateUtil {
 
     /**
      * 将 sourceSheet 的内容（包括行、单元格、基本样式）复制到 targetSheet
+     *
+     * @param workbook    工作簿
+     * @param sourceSheet 源工作表
+     * @param targetSheet 目标工作表
+     *
      */
     public static void copySheet(Workbook workbook, Sheet sourceSheet, Sheet targetSheet) {
         // 复制所有行

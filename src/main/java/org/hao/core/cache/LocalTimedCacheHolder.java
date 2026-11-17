@@ -30,7 +30,7 @@ public class LocalTimedCacheHolder<K, V> implements CacheHolder<K, V> {
 
     /**
      * 构造函数，初始化 TimedCache 并设置过期时间。
-     *
+     * @param seconds token 过期时间，单位为秒
      */
     public LocalTimedCacheHolder(long seconds) {
         long timeout = seconds == 0 ? DEFAULT_EXPIRE_BUFFER : TimeUnit.SECONDS.toMillis(seconds);
